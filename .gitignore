@@ -255,6 +255,8 @@ modules.xml
 hs_err_pid*
 replay_pid*
 
+vsdoc/
+
 ### macOS ###
 # General
 .DS_Store
@@ -352,4 +354,3 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,intellij,intellij+iml,intellij+all,java,maven,visualstudiocode
-

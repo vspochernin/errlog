@@ -1,0 +1,5 @@
+services:
+  jerrgen:
+    build:
+      context: ./generators/jerrgen
+    restart: unless-stopped # Перезапуск, если контекнер упал.
