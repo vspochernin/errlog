@@ -1,9 +1,11 @@
 <configuration>
     <appender name="JSON_LINES_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.JsonEncoder">
+            <!-- Нужные поля (включаем) -->
             <withFormattedMessage>true</withFormattedMessage>
             <withMessage>true</withMessage>
 
+            <!-- Ненужные поля (отключаем) -->
             <withArguments>false</withArguments>
             <withContext>false</withContext>
             <withMDC>false</withMDC>
@@ -12,8 +14,7 @@
         </encoder>
     </appender>
 
-    <root>
-        <level value="INFO"/>
+    <root level="INFO">
         <appender-ref ref="JSON_LINES_STDOUT"/>
     </root>
 </configuration>

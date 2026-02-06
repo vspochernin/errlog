@@ -2,4 +2,7 @@ services:
   jerrgen:
     build:
       context: ./generators/jerrgen
-    restart: unless-stopped # Перезапуск, если контекнер упал.
+#    TODO: отключить в будущем, когда проверю, что фильтрация в векторе работает.
+#    environment:
+#      SPRING_MAIN_BANNER_MODE: "off"
+    restart: unless-stopped # Перезапуск, если контейнер упал.
