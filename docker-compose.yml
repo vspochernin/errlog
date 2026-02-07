@@ -2,11 +2,10 @@ services:
   jerrgen:
     build:
       context: ./generators/jerrgen
-    environment:
-      SPRING_MAIN_BANNER_MODE: "on" # Отключить в будущем, когда Vector научится фильтровать НЕ JSON.
     labels:
       errlog.collect: "true" # Лейбл для Vector (показывает, что с контейнеров этого сервиса нужно собирать логи).
       errlog.source_type: "java-spring-logback-json" # Лейбл для Vector (с его помощью будет выбираться обработчик).
+      errlog.service_version: "${JERRGEN_VERSION:-1.2.345}" # Лейбл для Vector, имитирующий версию сервиса.
     restart: unless-stopped
 
   kafka:
@@ -22,7 +21,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
       KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093" # Описание кворума контроллеров.
 
-      # Настройки single-node кластера, чтобы не было ошибок с репликацией.
+      # Настройки кластера, чтобы не было ошибок с репликацией в single-node.
       # Устанавливаем фактор репликации 1.
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
@@ -33,4 +32,21 @@ services:
 
       # Автоматическое создание топика при отправке в него сообщения (TODO: мб сделать ручное).
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      # Проверка успешного запуска (важно, потому что запуск Vector у нас зависит от Kafka).
+      test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  vector:
+    image: timberio/vector:0.53.0-debian
+    depends_on:
+      kafka:
+        condition: service_healthy # Запускаем только после успешного запуска Kafka, чтобы не было ошибок.
+    volumes:
+      - ./docker/vector/vector.yaml:/etc/vector/vector.yaml # Перемещение конфигурации Vector в путь по-умолчанию.
+      - /var/run/docker.sock:/var/run/docker.sock # Доступ к docker logs через сокет.
+    user: "0:0" # Нюансы докер групп. Гарантируем доступ Vector к сокету докера (запускаем от рута).
     restart: unless-stopped
