@@ -46,7 +46,37 @@ services:
       kafka:
         condition: service_healthy # Запускаем только после успешного запуска Kafka, чтобы не было ошибок.
     volumes:
-      - ./docker/vector/vector.yaml:/etc/vector/vector.yaml # Перемещение конфигурации Vector в путь по-умолчанию.
+      - ./docker/vector/vector.yaml:/etc/vector/vector.yaml:ro # Перемещение конфигурации Vector в путь по-умолчанию.
       - /var/run/docker.sock:/var/run/docker.sock # Доступ к docker logs через сокет.
     user: "0:0" # Нюансы докер групп. Гарантируем доступ Vector к сокету докера (запускаем от рута).
     restart: unless-stopped
+
+  postgres:
+    image: postgres:18.1
+    environment:
+      POSTGRES_DB: errlog
+      POSTGRES_USER: errlog
+      POSTGRES_PASSWORD: errlog
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    restart: unless-stopped
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.1
+    environment:
+      CLICKHOUSE_DB: errlog
+      CLICKHOUSE_USER: errlog
+      CLICKHOUSE_PASSWORD: errlog
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "8123:8123" # Порт для HTTP запросов.
+      - "9000:9000" # Порт для клиентов.
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  clickhouse_data:

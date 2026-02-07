@@ -46,9 +46,13 @@ transforms:
       
       # Далее работаем уже со спаршенным сообщением.
       . = parsed
-
+      
+      # Безопасно приводим уровень ошибки к строке (если что - пропустим).
+      lvl, err = to_string(.level)
+      if err != null { abort }
+      
       # Оставляем только WARN и ERROR сообщения.
-      lvl = upcase(to_string!(.level))
+      lvl = upcase(lvl)
       if lvl != "WARN" && lvl != "ERROR" { abort }
       .level = lvl
 
