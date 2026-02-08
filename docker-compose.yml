@@ -57,6 +57,8 @@ services:
       - "1"
       - "--replication-factor"
       - "1"
+      - "--config"
+      - "retention.ms=259200000" # Трое суток.
     restart: "no"
 
   vector:
