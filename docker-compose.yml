@@ -2,7 +2,104 @@ services:
   jerrgen:
     build:
       context: ./generators/jerrgen
-#    TODO: отключить в будущем, когда проверю, что фильтрация в векторе работает.
-#    environment:
-#      SPRING_MAIN_BANNER_MODE: "off"
-    restart: unless-stopped # Перезапуск, если контейнер упал.
+    labels:
+      errlog.collect: "true" # Лейбл для Vector (показывает, что с контейнеров этого сервиса нужно собирать логи).
+      errlog.source_type: "java-spring-logback-json" # Лейбл для Vector (с его помощью будет выбираться обработчик).
+      errlog.service_version: "${JERRGEN_VERSION:-1.2.345}" # Лейбл для Vector, имитирующий версию сервиса.
+    restart: "unless-stopped"
+
+  kafka:
+    image: apache/kafka:4.1.1
+    environment:
+      # Настройка KRaft (без ZooKeeper).
+      KAFKA_NODE_ID: "1" # С одной нодой.
+      KAFKA_PROCESS_ROLES: "broker,controller" # Нода и брокер, и контроллер.
+      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093" # Слушатели для клиентов и внутреннего кворума.
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092" # Как нода будет объявлять себя клиентам.
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER" # Какой слушатель используется для роли controller.
+      # Сопоставление имен слушателей с протоколами безопасности.
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093" # Описание кворума контроллеров.
+
+      # Настройки кластера, чтобы не было ошибок с репликацией в single-node.
+      # Устанавливаем фактор репликации 1.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+
+      # Для ускорения старта (убираем задержку перед ребалансом групп).
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+
+      # Отключаем автоматическое создание топика (будем создавать вручную).
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    healthcheck:
+      # Проверка успешного запуска (важно, потому что запуски vector и kafka-init зависят от успешного запуска kafka).
+      test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: "unless-stopped"
+
+  kafka-init:
+    image: apache/kafka:4.1.1
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: [ "/opt/kafka/bin/kafka-topics.sh" ]
+    command:
+      - "--bootstrap-server"
+      - "kafka:9092"
+      - "--create"
+      - "--if-not-exists"
+      - "--topic"
+      - "errors-raw"
+      - "--partitions"
+      - "1"
+      - "--replication-factor"
+      - "1"
+      - "--config"
+      - "retention.ms=259200000" # Трое суток.
+    restart: "no"
+
+  vector:
+    image: timberio/vector:0.53.0-debian
+    depends_on: # Запускаем только после успешного старта и инициализации Kafka.
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    volumes:
+      - ./docker/vector/vector.yaml:/etc/vector/vector.yaml:ro # Перемещение конфигурации Vector в путь по-умолчанию.
+      - /var/run/docker.sock:/var/run/docker.sock # Доступ к docker logs через сокет.
+    user: "0:0" # Нюансы докер групп. Гарантируем доступ Vector к сокету докера (запускаем от рута).
+    restart: "unless-stopped"
+
+  postgres:
+    image: postgres:18.1
+    environment:
+      POSTGRES_DB: "errlog"
+      POSTGRES_USER: "errlog"
+      POSTGRES_PASSWORD: "errlog"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    restart: "unless-stopped"
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.1
+    environment:
+      CLICKHOUSE_DB: "errlog"
+      CLICKHOUSE_USER: "errlog"
+      CLICKHOUSE_PASSWORD: "errlog"
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "8123:8123" # Порт для HTTP запросов.
+      - "9000:9000" # Порт для клиентов.
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    restart: "unless-stopped"
+
+volumes:
+  postgres_data:
+  clickhouse_data:
