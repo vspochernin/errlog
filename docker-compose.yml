@@ -30,21 +30,42 @@ services:
       # Для ускорения старта (убираем задержку перед ребалансом групп).
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
 
-      # Автоматическое создание топика при отправке в него сообщения (TODO: мб сделать ручное).
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # Отключаем автоматическое созвание топика (будем создавать вручную).
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
     healthcheck:
-      # Проверка успешного запуска (важно, потому что запуск Vector у нас зависит от Kafka).
+      # Проверка успешного запуска (важно, потому что запуски vector и kafka-init зависят от успешного запуска kafka).
       test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1" ]
       interval: 5s
       timeout: 5s
       retries: 30
     restart: unless-stopped
 
-  vector:
-    image: timberio/vector:0.53.0-debian
+  kafka-init:
+    image: apache/kafka:4.1.1
     depends_on:
       kafka:
-        condition: service_healthy # Запускаем только после успешного запуска Kafka, чтобы не было ошибок.
+        condition: service_healthy
+    entrypoint: [ "/opt/kafka/bin/kafka-topics.sh" ]
+    command:
+      - "--bootstrap-server"
+      - "kafka:9092"
+      - "--create"
+      - "--if-not-exists"
+      - "--topic"
+      - "errors-raw"
+      - "--partitions"
+      - "1"
+      - "--replication-factor"
+      - "1"
+    restart: no
+
+  vector:
+    image: timberio/vector:0.53.0-debian
+    depends_on: # Запускаем только после успешного старта и инициализации Kafka.
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     volumes:
       - ./docker/vector/vector.yaml:/etc/vector/vector.yaml:ro # Перемещение конфигурации Vector в путь по-умолчанию.
       - /var/run/docker.sock:/var/run/docker.sock # Доступ к docker logs через сокет.
