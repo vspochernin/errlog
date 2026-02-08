@@ -27,6 +27,6 @@
 ### Проверка
 
 - Запустить стенд `docker compose up -d --build`.
-- Проверить наличие событий ошибок в Kafka `docker compose exec --workdir /opt/kafka/bin kafka sh -lc './kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic errors-raw --from-beginning'`
+- Проверить наличие событий ошибок в Kafka `docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic errors-raw --from-beginning`
 - Проверить работу ClickHouse `curl "http://localhost:8123/?user=errlog&password=errlog&query=SELECT%201"`.
 - Проверить работу PostgreSQL `docker compose exec postgres psql -U errlog -d errlog -c "select 1;"`.
