@@ -6,7 +6,7 @@ services:
       errlog.collect: "true" # Лейбл для Vector (показывает, что с контейнеров этого сервиса нужно собирать логи).
       errlog.source_type: "java-spring-logback-json" # Лейбл для Vector (с его помощью будет выбираться обработчик).
       errlog.service_version: "${JERRGEN_VERSION:-1.2.345}" # Лейбл для Vector, имитирующий версию сервиса.
-    restart: unless-stopped
+    restart: "unless-stopped"
 
   kafka:
     image: apache/kafka:4.1.1
@@ -38,7 +38,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
-    restart: unless-stopped
+    restart: "unless-stopped"
 
   kafka-init:
     image: apache/kafka:4.1.1
@@ -57,7 +57,7 @@ services:
       - "1"
       - "--replication-factor"
       - "1"
-    restart: no
+    restart: "no"
 
   vector:
     image: timberio/vector:0.53.0-debian
@@ -70,33 +70,33 @@ services:
       - ./docker/vector/vector.yaml:/etc/vector/vector.yaml:ro # Перемещение конфигурации Vector в путь по-умолчанию.
       - /var/run/docker.sock:/var/run/docker.sock # Доступ к docker logs через сокет.
     user: "0:0" # Нюансы докер групп. Гарантируем доступ Vector к сокету докера (запускаем от рута).
-    restart: unless-stopped
+    restart: "unless-stopped"
 
   postgres:
     image: postgres:18.1
     environment:
-      POSTGRES_DB: errlog
-      POSTGRES_USER: errlog
-      POSTGRES_PASSWORD: errlog
+      POSTGRES_DB: "errlog"
+      POSTGRES_USER: "errlog"
+      POSTGRES_PASSWORD: "errlog"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
-    restart: unless-stopped
+    restart: "unless-stopped"
 
   clickhouse:
     image: clickhouse/clickhouse-server:26.1
     environment:
-      CLICKHOUSE_DB: errlog
-      CLICKHOUSE_USER: errlog
-      CLICKHOUSE_PASSWORD: errlog
+      CLICKHOUSE_DB: "errlog"
+      CLICKHOUSE_USER: "errlog"
+      CLICKHOUSE_PASSWORD: "errlog"
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
     ports:
       - "8123:8123" # Порт для HTTP запросов.
       - "9000:9000" # Порт для клиентов.
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-    restart: unless-stopped
+    restart: "unless-stopped"
 
 volumes:
   postgres_data:

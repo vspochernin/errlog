@@ -43,14 +43,14 @@ transforms:
       # Парсим JSON.
       parsed, err = parse_json(msg)
       if err != null { abort }
-      
+
       # Далее работаем уже со спаршенным сообщением.
       . = parsed
-      
+
       # Безопасно приводим уровень ошибки к строке (если что - пропустим).
       lvl, err = to_string(.level)
       if err != null { abort }
-      
+
       # Оставляем только WARN и ERROR сообщения.
       lvl = upcase(lvl)
       if lvl != "WARN" && lvl != "ERROR" { abort }
