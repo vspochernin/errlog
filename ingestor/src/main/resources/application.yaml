@@ -1,3 +1,18 @@
 spring:
   application:
     name: ingestor
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS} # Адрес Kafka.
+    consumer:
+      group-id: ${KAFKA_GROUP_ID}  # Название консьюмер-группы для сервиса Ingestor.
+      enable-auto-commit: false # Будем коммитить вручную после записи в ClickHouse.
+      auto-offset-reset: earliest # При первом запуске читаем топик с начала.
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer # Ключ - строка.
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer # Значение - строка (JSON).
+    listener:
+      ack-mode: manual # Ручной коммит.
+  datasource:
+    url: ${CLICKHOUSE_JDBC_URL} # Адрес ClickHouse.
+    username: ${CLICKHOUSE_USER}
+    password: ${CLICKHOUSE_PASSWORD}
+    driver-class-name: com.clickhouse.jdbc.ClickHouseDriver # Драйвер ClickHouse

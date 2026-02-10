@@ -100,6 +100,25 @@ services:
       - clickhouse_data:/var/lib/clickhouse
     restart: "unless-stopped"
 
+  ingestor:
+    build:
+      context: ./ingestor
+    depends_on: # Ждем, когда стартуют Kafka и ClickHouse.
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      clickhouse:
+        condition: service_started
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      KAFKA_TOPIC: "errors-raw"
+      KAFKA_GROUP_ID: "errlog-ingestor"
+      CLICKHOUSE_JDBC_URL: "jdbc:clickhouse://clickhouse:8123/errlog"
+      CLICKHOUSE_USER: "errlog"
+      CLICKHOUSE_PASSWORD: "errlog"
+    restart: "unless-stopped"
+
 volumes:
   postgres_data:
   clickhouse_data:
