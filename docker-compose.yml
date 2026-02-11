@@ -32,12 +32,12 @@ services:
 
       # Отключаем автоматическое создание топика (будем создавать вручную).
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-    healthcheck:
-      # Проверка успешного запуска (важно, потому что запуски vector и kafka-init зависят от успешного запуска kafka).
+    healthcheck: # Чтобы запускать vector и kafka-init только после успешного запуска kafka.
       test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1" ]
       interval: 5s
       timeout: 5s
       retries: 30
+      start_period: 10s
     restart: "unless-stopped"
 
   kafka-init:
@@ -84,6 +84,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
+    healthcheck: # Чтобы запускать api только после успешного старта postgres.
+      test: [ "CMD-SHELL", "pg_isready -U errlog -d errlog -h localhost >/dev/null 2>&1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
     restart: "unless-stopped"
 
   clickhouse:
@@ -98,6 +104,12 @@ services:
       - "9000:9000" # Порт для клиентов.
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+    healthcheck: # Чтобы запускать ingestor только после успешного старта clickhouse.
+      test: [ "CMD-SHELL", "clickhouse-client --host localhost --user errlog --password errlog --query 'SELECT 1' >/dev/null 2>&1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
     restart: "unless-stopped"
 
   ingestor:
@@ -109,7 +121,7 @@ services:
       kafka-init:
         condition: service_completed_successfully
       clickhouse:
-        condition: service_started
+        condition: service_healthy
     environment:
       KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
       KAFKA_TOPIC: "errors-raw"
