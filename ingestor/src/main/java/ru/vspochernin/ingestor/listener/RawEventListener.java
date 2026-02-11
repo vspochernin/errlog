@@ -1,4 +1,4 @@
-package ru.vspochernin.ingestor;
+package ru.vspochernin.ingestor.listener;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;

@@ -45,20 +45,10 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-    entrypoint: [ "/opt/kafka/bin/kafka-topics.sh" ]
-    command:
-      - "--bootstrap-server"
-      - "kafka:9092"
-      - "--create"
-      - "--if-not-exists"
-      - "--topic"
-      - "errors-raw"
-      - "--partitions"
-      - "1"
-      - "--replication-factor"
-      - "1"
-      - "--config"
-      - "retention.ms=259200000" # Трое суток.
+    entrypoint: [ "/bin/sh", "-lc" ]
+    command: [ "./init/init.sh" ]
+    volumes:
+      - ./docker/kafka/init.sh:/init/init.sh:ro
     restart: "no"
 
   vector:
@@ -77,15 +67,15 @@ services:
   postgres:
     image: postgres:18.1
     environment:
-      POSTGRES_DB: "errlog"
-      POSTGRES_USER: "errlog"
-      POSTGRES_PASSWORD: "errlog"
+      POSTGRES_DB: "errlog_pg"
+      POSTGRES_USER: "errlog_pg_user"
+      POSTGRES_PASSWORD: "errlog_pg_password"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck: # Чтобы запускать api только после успешного старта postgres.
-      test: [ "CMD-SHELL", "pg_isready -U errlog -d errlog -h localhost >/dev/null 2>&1" ]
+      test: [ "CMD-SHELL", "pg_isready -U errlog_pg_user -d errlog_pg -h localhost >/dev/null 2>&1" ]
       interval: 5s
       timeout: 5s
       retries: 30
@@ -95,22 +85,32 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server:26.1
     environment:
-      CLICKHOUSE_DB: "errlog"
-      CLICKHOUSE_USER: "errlog"
-      CLICKHOUSE_PASSWORD: "errlog"
-      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+      CLICKHOUSE_USER: "errlog_ch_user"
+      CLICKHOUSE_PASSWORD: "errlog_ch_password"
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1" # Для корректного создания пользователя.
     ports:
       - "8123:8123" # Порт для HTTP запросов.
-      - "9000:9000" # Порт для клиентов.
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-    healthcheck: # Чтобы запускать ingestor только после успешного старта clickhouse.
-      test: [ "CMD-SHELL", "clickhouse-client --host localhost --user errlog --password errlog --query 'SELECT 1' >/dev/null 2>&1" ]
+    healthcheck: # Чтобы запускать ingestor и clickhouse-init только после успешного старта clickhouse.
+      test: [ "CMD-SHELL", "clickhouse-client --host localhost --user errlog_ch_user --password errlog_ch_password --query 'SELECT 1' >/dev/null 2>&1" ]
       interval: 5s
       timeout: 5s
       retries: 30
       start_period: 10s
     restart: "unless-stopped"
+
+  clickhouse-init:
+    image: clickhouse/clickhouse-server:26.1
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    entrypoint: [ "/bin/sh", "-lc" ]
+    command:
+      - "cat /init/init.sql | clickhouse-client --host clickhouse --user errlog_ch_user --password errlog_ch_password --multiquery" # Запускаем несколько команд в файле.
+    volumes:
+      - ./docker/clickhouse/init.sql:/init/init.sql:ro
+    restart: "no"
 
   ingestor:
     build:
@@ -122,13 +122,15 @@ services:
         condition: service_completed_successfully
       clickhouse:
         condition: service_healthy
+      clickhouse-init:
+        condition: service_completed_successfully
     environment:
       KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
       KAFKA_TOPIC: "errors-raw"
       KAFKA_GROUP_ID: "errlog-ingestor"
-      CLICKHOUSE_JDBC_URL: "jdbc:clickhouse://clickhouse:8123/errlog"
-      CLICKHOUSE_USER: "errlog"
-      CLICKHOUSE_PASSWORD: "errlog"
+      CLICKHOUSE_JDBC_URL: "jdbc:clickhouse://clickhouse:8123/errlog_ch"
+      CLICKHOUSE_USER: "errlog_ch_user"
+      CLICKHOUSE_PASSWORD: "errlog_ch_password"
     restart: "unless-stopped"
 
 volumes:
