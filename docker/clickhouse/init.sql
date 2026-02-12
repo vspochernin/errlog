@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS errlog_ch.error_events
     level              LowCardinality(String),
     message_formatted  String,
     fingerprint        UInt64,
-    source_type        LowCardinality(String),
     fingerprint_source LowCardinality(String),
+    source_type        LowCardinality(String),
 
     instance           Nullable(String),
     service_version    Nullable(String),
