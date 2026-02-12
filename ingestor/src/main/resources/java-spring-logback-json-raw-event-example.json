@@ -1,0 +1,123 @@
+[
+  {
+    "formattedMessage": "There is warn with int: 190842500 and double: 0.6935457027809516",
+    "instance": "errlog-jerrgen-1",
+    "level": "WARN",
+    "loggerName": "ru.vspochernin.jerrgen.generator.SimpleGenerator",
+    "message": "There is warn with int: {} and double: {}",
+    "service": "jerrgen",
+    "serviceVersion": "1.2.345",
+    "sourceType": "java-spring-logback-json",
+    "threadName": "scheduling-1",
+    "throwable": null,
+    "timestamp": 1770883405986
+  },
+  {
+    "formattedMessage": "There is exception with int: 1465330689 and double: 0.21670510699072487",
+    "instance": "errlog-jerrgen-1",
+    "level": "ERROR",
+    "loggerName": "ru.vspochernin.jerrgen.generator.SimpleGenerator",
+    "message": "There is exception with int: {} and double: {}",
+    "service": "jerrgen",
+    "serviceVersion": "1.2.345",
+    "sourceType": "java-spring-logback-json",
+    "threadName": "scheduling-1",
+    "throwable": {
+      "className": "java.lang.IllegalAccessException",
+      "message": "Exception message, but log message with placeholders",
+      "stepArray": [
+        {
+          "className": "ru.vspochernin.jerrgen.generator.SimpleGenerator",
+          "fileName": "SimpleGenerator.java",
+          "lineNumber": 47,
+          "methodName": "generateExceptionLogMessageWithPlaceholders"
+        },
+        {
+          "className": "jdk.internal.reflect.DirectMethodHandleAccessor",
+          "fileName": "null",
+          "lineNumber": -1,
+          "methodName": "invoke"
+        },
+        {
+          "className": "java.lang.reflect.Method",
+          "fileName": "null",
+          "lineNumber": -1,
+          "methodName": "invoke"
+        },
+        {
+          "className": "org.springframework.scheduling.support.ScheduledMethodRunnable",
+          "fileName": "ScheduledMethodRunnable.java",
+          "lineNumber": 130,
+          "methodName": "runInternal"
+        },
+        {
+          "className": "org.springframework.scheduling.support.ScheduledMethodRunnable",
+          "fileName": "ScheduledMethodRunnable.java",
+          "lineNumber": 124,
+          "methodName": "lambda$run$2"
+        },
+        {
+          "className": "io.micrometer.observation.Observation",
+          "fileName": "Observation.java",
+          "lineNumber": 498,
+          "methodName": "observe"
+        },
+        {
+          "className": "org.springframework.scheduling.support.ScheduledMethodRunnable",
+          "fileName": "ScheduledMethodRunnable.java",
+          "lineNumber": 124,
+          "methodName": "run"
+        },
+        {
+          "className": "org.springframework.scheduling.config.Task$OutcomeTrackingRunnable",
+          "fileName": "Task.java",
+          "lineNumber": 87,
+          "methodName": "run"
+        },
+        {
+          "className": "org.springframework.scheduling.support.DelegatingErrorHandlingRunnable",
+          "fileName": "DelegatingErrorHandlingRunnable.java",
+          "lineNumber": 54,
+          "methodName": "run"
+        },
+        {
+          "className": "java.util.concurrent.Executors$RunnableAdapter",
+          "fileName": "null",
+          "lineNumber": -1,
+          "methodName": "call"
+        },
+        {
+          "className": "java.util.concurrent.FutureTask",
+          "fileName": "null",
+          "lineNumber": -1,
+          "methodName": "runAndReset"
+        },
+        {
+          "className": "java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask",
+          "fileName": "null",
+          "lineNumber": -1,
+          "methodName": "run"
+        },
+        {
+          "className": "java.util.concurrent.ThreadPoolExecutor",
+          "fileName": "null",
+          "lineNumber": -1,
+          "methodName": "runWorker"
+        },
+        {
+          "className": "java.util.concurrent.ThreadPoolExecutor$Worker",
+          "fileName": "null",
+          "lineNumber": -1,
+          "methodName": "run"
+        },
+        {
+          "className": "java.lang.Thread",
+          "fileName": "null",
+          "lineNumber": -1,
+          "methodName": "run"
+        }
+      ]
+    },
+    "timestamp": 1770883406756
+  }
+]

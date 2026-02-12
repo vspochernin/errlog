@@ -11,6 +11,7 @@ import lombok.val;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import ru.vspochernin.ingestor.dto.JavaSpringLogbackJsonRawEventDto;
 
 @Component
 @Slf4j
@@ -28,15 +29,10 @@ public class RawEventListener {
         try {
             for (val value : values) {
                 JsonNode node = objectMapper.readTree(value);
-
-                String level = node.path("level").asText("UNKNOWN");
-                String service = node.path("service").asText("unknown-service");
-                String instance = node.path("instance").asText("unknown-instance");
-                String sourceType = node.path("sourceType").asText("unknown-source-type");
-
-                log.info("ingestor got event: level={} service={}, instance={} AsourceType={}", level, service, instance, sourceType);
+                JavaSpringLogbackJsonRawEventDto eventDto =
+                        objectMapper.treeToValue(node, JavaSpringLogbackJsonRawEventDto.class);
+                log.info("ingestor got eventDto: {}", eventDto);
             }
-
             ack.acknowledge();
         } catch (JsonProcessingException e) {
             log.error("Can't read json tree: {} ", e.getMessage());

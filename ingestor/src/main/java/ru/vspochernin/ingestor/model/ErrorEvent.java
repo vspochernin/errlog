@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record ErrorEvent(
+
         UUID eventId,
         Instant timestamp,
 
