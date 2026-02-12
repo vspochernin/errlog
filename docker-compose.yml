@@ -46,7 +46,7 @@ services:
       kafka:
         condition: service_healthy
     entrypoint: [ "/bin/sh", "-lc" ]
-    command: [ "./init/init.sh" ]
+    command: [ "sh /init/init.sh" ]
     volumes:
       - ./docker/kafka/init.sh:/init/init.sh:ro
     restart: "no"
@@ -62,24 +62,6 @@ services:
       - ./docker/vector/vector.yaml:/etc/vector/vector.yaml:ro # Перемещение конфигурации Vector в путь по-умолчанию.
       - /var/run/docker.sock:/var/run/docker.sock # Доступ к docker logs через сокет.
     user: "0:0" # Нюансы докер групп. Гарантируем доступ Vector к сокету докера (запускаем от рута).
-    restart: "unless-stopped"
-
-  postgres:
-    image: postgres:18.1
-    environment:
-      POSTGRES_DB: "errlog_pg"
-      POSTGRES_USER: "errlog_pg_user"
-      POSTGRES_PASSWORD: "errlog_pg_password"
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql
-    healthcheck: # Чтобы запускать api только после успешного старта postgres.
-      test: [ "CMD-SHELL", "pg_isready -U errlog_pg_user -d errlog_pg -h localhost >/dev/null 2>&1" ]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 10s
     restart: "unless-stopped"
 
   clickhouse:
@@ -106,8 +88,7 @@ services:
       clickhouse:
         condition: service_healthy
     entrypoint: [ "/bin/sh", "-lc" ]
-    command:
-      - "cat /init/init.sql | clickhouse-client --host clickhouse --user errlog_ch_user --password errlog_ch_password --multiquery" # Запускаем несколько команд в файле.
+    command: [ "clickhouse-client --host clickhouse --user errlog_ch_user --password errlog_ch_password --multiquery < /init/init.sql" ]
     volumes:
       - ./docker/clickhouse/init.sql:/init/init.sql:ro
     restart: "no"
@@ -131,6 +112,24 @@ services:
       CLICKHOUSE_JDBC_URL: "jdbc:clickhouse://clickhouse:8123/errlog_ch"
       CLICKHOUSE_USER: "errlog_ch_user"
       CLICKHOUSE_PASSWORD: "errlog_ch_password"
+    restart: "unless-stopped"
+
+  postgres:
+    image: postgres:18.1
+    environment:
+      POSTGRES_DB: "errlog_pg"
+      POSTGRES_USER: "errlog_pg_user"
+      POSTGRES_PASSWORD: "errlog_pg_password"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck: # Чтобы запускать api только после успешного старта postgres.
+      test: [ "CMD-SHELL", "pg_isready -U errlog_pg_user -d errlog_pg -h localhost >/dev/null 2>&1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
     restart: "unless-stopped"
 
 volumes:
