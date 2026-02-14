@@ -10,7 +10,7 @@ public record ErrorEvent(
 
         String service,
         String level,
-        String message_formatted,
+        String messageFormatted,
         long fingerprint,
         String fingerprintSource,
         String sourceType,

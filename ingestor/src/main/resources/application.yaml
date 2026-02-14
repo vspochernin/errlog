@@ -9,7 +9,7 @@ spring:
       auto-offset-reset: earliest # При первом запуске читаем топик с начала.
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer # Ключ - строка.
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer # Значение - строка (JSON).
-      max-poll-records: ${KAFKA_MAX_POLL_RECORDS:200} # Верхняя граница количества записей от одного poll.
+      max-poll-records: 200 # Верхняя граница количества записей от одного poll.
     listener:
       type: batch # Отдавать то, что пришло из одного poll списком (батчем).
       ack-mode: manual # Ручной коммит.

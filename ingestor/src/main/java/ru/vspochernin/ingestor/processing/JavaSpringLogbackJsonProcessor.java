@@ -19,7 +19,7 @@ import ru.vspochernin.ingestor.utils.StringUtils;
 @Slf4j
 public class JavaSpringLogbackJsonProcessor implements RawEventProcessor {
 
-    private final ObjectMapper mapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     public String sourceType() {
@@ -30,7 +30,7 @@ public class JavaSpringLogbackJsonProcessor implements RawEventProcessor {
     public Optional<ErrorEvent> processEvent(JsonNode rawEvent) {
         JavaSpringLogbackJsonRawEventDto dto;
         try {
-            dto = mapper.treeToValue(rawEvent, JavaSpringLogbackJsonRawEventDto.class);
+            dto = objectMapper.treeToValue(rawEvent, JavaSpringLogbackJsonRawEventDto.class);
         } catch (JsonProcessingException e) {
             log.error("Error processing raw event {} because of exception {}", rawEvent, e.getMessage());
             return Optional.empty();
