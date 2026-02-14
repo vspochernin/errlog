@@ -3,6 +3,7 @@ package ru.vspochernin.ingestor.dto;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import ru.vspochernin.ingestor.utils.StringUtils;
 
 public record JavaSpringLogbackJsonRawEventDto(
 
@@ -50,5 +51,52 @@ public record JavaSpringLogbackJsonRawEventDto(
                 String methodName)
         {
         }
+    }
+
+    public String getStacktraceFormatted() {
+        if (throwable() == null) {
+            return null;
+        }
+        ThrowableDto t = throwable();
+        StringBuilder sb = new StringBuilder();
+
+        if (StringUtils.isNotBlank(t.className())) {
+            sb.append(t.className());
+            if (StringUtils.isNotBlank(t.message())) {
+                sb.append(": ").append(t.message());
+            }
+            sb.append('\n');
+        }
+
+        List<ThrowableDto.StepDto> steps = t.stepArray();
+        if (steps == null || steps.isEmpty()) {
+            return sb.isEmpty() ? null : sb.toString().trim();
+        }
+
+        for (ThrowableDto.StepDto step : steps) {
+            sb.append("\tat ")
+                    .append(StringUtils.getStringOrDefault(step.className(), "Unknown"))
+                    .append('.')
+                    .append(StringUtils.getStringOrDefault(step.methodName(), "Unknown"))
+                    .append('(')
+                    .append(formatLocation(step.fileName(), step.lineNumber()))
+                    .append(')')
+                    .append('\n');
+        }
+
+        return sb.toString().trim();
+    }
+
+    // В нашем случае fileName может быть строкой "null".
+    private static String formatLocation(String fileName, int lineNumber) {
+        if (fileName == null || fileName.isBlank() || fileName.equalsIgnoreCase("null")) {
+            return "Unknown source";
+        }
+
+        if (lineNumber > 0) {
+            return fileName + ":" + lineNumber;
+        }
+
+        return fileName;
     }
 }
