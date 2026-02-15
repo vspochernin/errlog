@@ -37,6 +37,6 @@ public class RawEventProcessorRegistry {
         if (sourceType == null) {
             return unknownRawEventProcessor;
         }
-        return bySourceType.get(sourceType);
+        return bySourceType.getOrDefault(sourceType, unknownRawEventProcessor);
     }
 }
