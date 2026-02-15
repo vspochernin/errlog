@@ -12,7 +12,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import ru.vspochernin.ingestor.model.ErrorEvent;
-import ru.vspochernin.ingestor.processing.RawEventProcessorRegistry;
+import ru.vspochernin.ingestor.normalization.RawEventNormalizerRegistry;
 import ru.vspochernin.ingestor.writer.ErrorEventWriter;
 
 @Component
@@ -21,7 +21,7 @@ import ru.vspochernin.ingestor.writer.ErrorEventWriter;
 public class RawEventKafkaListener {
 
     private final ObjectMapper objectMapper;
-    private final RawEventProcessorRegistry processorRegistry;
+    private final RawEventNormalizerRegistry normalizerRegistry;
     private final ErrorEventWriter eventWriter;
 
     @KafkaListener(topics = "${KAFKA_TOPIC}")
@@ -34,8 +34,8 @@ public class RawEventKafkaListener {
                 JsonNode rawEvent = objectMapper.readTree(rawEventStr);
                 String sourceType = rawEvent.path("sourceType").asText(null);
 
-                processorRegistry.getProcessor(sourceType)
-                        .process(rawEvent)
+                normalizerRegistry.getNormalizer(sourceType)
+                        .normalize(rawEvent)
                         .ifPresentOrElse(batch::add, skipCount::getAndIncrement);
             } catch (Exception e) {
                 skipCount.getAndIncrement();

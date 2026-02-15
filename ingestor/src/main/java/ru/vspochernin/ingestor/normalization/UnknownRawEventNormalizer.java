@@ -1,4 +1,4 @@
-package ru.vspochernin.ingestor.processing;
+package ru.vspochernin.ingestor.normalization;
 
 import java.util.Optional;
 
@@ -9,7 +9,7 @@ import ru.vspochernin.ingestor.model.ErrorEvent;
 
 @Component
 @Slf4j
-public class UnknownRawEventProcessor implements RawEventProcessor {
+public class UnknownRawEventNormalizer implements RawEventNormalizer {
 
     // Фиктивный тип для неизвестных системе sourceType.
     static final String SOURCE_TYPE = "__unknown__";
@@ -20,9 +20,9 @@ public class UnknownRawEventProcessor implements RawEventProcessor {
     }
 
     @Override
-    public Optional<ErrorEvent> process(JsonNode rawEvent) {
+    public Optional<ErrorEvent> normalize(JsonNode rawEvent) {
         String sourceType = rawEvent.path("sourceType").asText(SOURCE_TYPE);
-        log.error("Unknown sourceType={}, rawEvent={} drop event", sourceType, rawEvent);
+        log.error("Unknown sourceType={}, skip rawEvent={}", sourceType, rawEvent);
         return Optional.empty();
     }
 }

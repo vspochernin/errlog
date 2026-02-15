@@ -4,7 +4,7 @@ services:
       context: ./generators/jerrgen
     labels:
       errlog.collect: "true" # Лейбл для Vector (показывает, что с контейнеров этого сервиса нужно собирать логи).
-      errlog.source_type: "java-spring-logback-json" # Лейбл для Vector (с его помощью будет выбираться обработчик).
+      errlog.source_type: "java-spring-logback" # Лейбл для Vector (с его помощью будет выбираться обработчик).
       errlog.service_version: "${JERRGEN_VERSION:-1.2.345}" # Лейбл для Vector, имитирующий версию сервиса.
     # Если нужно подключиться дебаггером.
     #    environment:
