@@ -2,6 +2,7 @@ package ru.vspochernin.ingestor.kafka;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -36,7 +37,26 @@ public class RawEventKafkaListener {
 
                 normalizerRegistry.getNormalizer(sourceType)
                         .normalize(rawEvent)
-                        .ifPresentOrElse(batch::add, skipCount::getAndIncrement);
+                        .ifPresentOrElse(normalizedErrorEvent -> {
+                            ErrorEvent ee = new ErrorEvent(
+                                    UUID.randomUUID(),
+                                    normalizedErrorEvent.timestamp(),
+                                    normalizedErrorEvent.sourceType(),
+                                    normalizedErrorEvent.service(),
+                                    normalizedErrorEvent.level(),
+                                    normalizedErrorEvent.messageFormatted(),
+                                    0L,
+                                    "UNKNOWN",
+                                    normalizedErrorEvent.instance(),
+                                    normalizedErrorEvent.serviceVersion(),
+                                    normalizedErrorEvent.logger(),
+                                    normalizedErrorEvent.messageTemplate(),
+                                    normalizedErrorEvent.exceptionClass(),
+                                    normalizedErrorEvent.exceptionMessage(),
+                                    normalizedErrorEvent.exceptionMessage(),
+                                    normalizedErrorEvent.stacktrace());
+                            batch.add(ee);
+                        }, skipCount::getAndIncrement);
             } catch (Exception e) {
                 skipCount.getAndIncrement();
                 log.warn("Skip raw event {} because of {}", rawEventStr, e.getMessage());

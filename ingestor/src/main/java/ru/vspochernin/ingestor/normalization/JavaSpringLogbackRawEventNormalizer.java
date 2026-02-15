@@ -2,7 +2,6 @@ package ru.vspochernin.ingestor.normalization;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.vspochernin.ingestor.dto.JavaSpringLogbackRawEventDto;
-import ru.vspochernin.ingestor.model.ErrorEvent;
+import ru.vspochernin.ingestor.model.NormalizedErrorEvent;
 import ru.vspochernin.ingestor.utils.StringUtils;
 
 @Component
@@ -27,7 +26,7 @@ public class JavaSpringLogbackRawEventNormalizer implements RawEventNormalizer {
     }
 
     @Override
-    public Optional<ErrorEvent> normalize(JsonNode rawEvent) {
+    public Optional<NormalizedErrorEvent> normalize(JsonNode rawEvent) {
         JavaSpringLogbackRawEventDto dto;
         try {
             dto = objectMapper.treeToValue(rawEvent, JavaSpringLogbackRawEventDto.class);
@@ -36,15 +35,12 @@ public class JavaSpringLogbackRawEventNormalizer implements RawEventNormalizer {
             return Optional.empty();
         }
 
-        return Optional.of(new ErrorEvent(
-                UUID.randomUUID(),
+        return Optional.of(new NormalizedErrorEvent(
                 dto.timestamp() > 0 ? Instant.ofEpochMilli(dto.timestamp()) : Instant.now(),
                 sourceType(),
                 StringUtils.getOrDefault(dto.service(), "unknown-service"),
                 StringUtils.getOrDefault(dto.level(), "UNKNOWN"),
                 StringUtils.getFirstNonBlankOrDefault(dto.formattedMessage(), dto.message(), "empty message"),
-                0L, // TODO: will be implemented in 6.
-                "UNKNOWN", // TODO: will be implemented in 6.
 
                 dto.instance(),
                 dto.serviceVersion(),
