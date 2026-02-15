@@ -5,14 +5,14 @@ public class StringUtils {
     private StringUtils() {
     }
 
-    public static String getStringOrDefault(String value, String defaultValue) {
+    public static String getOrDefault(String value, String defaultValue) {
         if (value == null || value.isBlank()) {
             return defaultValue;
         }
         return value;
     }
 
-    public static String getFirstNonBlankStringOrDefault(String value1, String value2, String defaultValue) {
+    public static String getFirstNonBlankOrDefault(String value1, String value2, String defaultValue) {
         if (value1 != null && !value1.isBlank()) {
             return value1;
         }

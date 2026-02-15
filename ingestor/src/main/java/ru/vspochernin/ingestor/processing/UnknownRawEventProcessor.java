@@ -11,15 +11,18 @@ import ru.vspochernin.ingestor.model.ErrorEvent;
 @Slf4j
 public class UnknownRawEventProcessor implements RawEventProcessor {
 
+    // Фиктивный тип для неизвестных системе sourceType.
+    static final String SOURCE_TYPE = "__unknown__";
+
     @Override
     public String sourceType() {
-        return RawEventProcessorRegistry.UNKNOWN_RAW_EVENT_PROCESSOR_SOURCE_TYPE;
+        return SOURCE_TYPE;
     }
 
     @Override
-    public Optional<ErrorEvent> processEvent(JsonNode rawEvent) {
-        String sourceType = rawEvent.path("sourceType").asText(null);
-        log.error("Unknown sourceType={}, drop event", sourceType);
+    public Optional<ErrorEvent> process(JsonNode rawEvent) {
+        String sourceType = rawEvent.path("sourceType").asText(SOURCE_TYPE);
+        log.error("Unknown sourceType={}, rawEvent={} drop event", sourceType, rawEvent);
         return Optional.empty();
     }
 }

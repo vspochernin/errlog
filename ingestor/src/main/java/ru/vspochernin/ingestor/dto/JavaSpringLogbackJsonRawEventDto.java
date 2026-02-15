@@ -75,9 +75,9 @@ public record JavaSpringLogbackJsonRawEventDto(
 
         for (ThrowableDto.StepDto step : steps) {
             sb.append("\tat ")
-                    .append(StringUtils.getStringOrDefault(step.className(), "Unknown"))
+                    .append(StringUtils.getOrDefault(step.className(), "Unknown className"))
                     .append('.')
-                    .append(StringUtils.getStringOrDefault(step.methodName(), "Unknown"))
+                    .append(StringUtils.getOrDefault(step.methodName(), "Unknown methodName"))
                     .append('(')
                     .append(formatLocation(step.fileName(), step.lineNumber()))
                     .append(')')
@@ -89,7 +89,7 @@ public record JavaSpringLogbackJsonRawEventDto(
 
     // В нашем случае fileName может быть строкой "null".
     private static String formatLocation(String fileName, int lineNumber) {
-        if (fileName == null || fileName.isBlank() || fileName.equalsIgnoreCase("null")) {
+        if (fileName == null || fileName.isBlank() || fileName.equals("null")) {
             return "Unknown source";
         }
 

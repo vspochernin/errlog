@@ -22,34 +22,34 @@ public class RawEventKafkaListener {
 
     private final ObjectMapper objectMapper;
     private final RawEventProcessorRegistry processorRegistry;
-    private final ErrorEventWriter writer;
+    private final ErrorEventWriter eventWriter;
 
     @KafkaListener(topics = "${KAFKA_TOPIC}")
-    public void onMessage(List<String> values, Acknowledgment ack) {
-        List<ErrorEvent> batch = new ArrayList<>(values.size());
-        AtomicInteger skipped = new AtomicInteger();
+    public void listen(List<String> rawEvents, Acknowledgment ack) {
+        List<ErrorEvent> batch = new ArrayList<>(rawEvents.size());
+        AtomicInteger skipCount = new AtomicInteger();
 
-        for (String value : values) {
+        for (String rawEventStr : rawEvents) {
             try {
-                JsonNode raw = objectMapper.readTree(value);
-                String sourceType = raw.path("sourceType").asText(null);
+                JsonNode rawEvent = objectMapper.readTree(rawEventStr);
+                String sourceType = rawEvent.path("sourceType").asText(null);
 
                 processorRegistry.getProcessor(sourceType)
-                        .processEvent(raw)
-                        .ifPresentOrElse(batch::add, skipped::getAndIncrement);
+                        .process(rawEvent)
+                        .ifPresentOrElse(batch::add, skipCount::getAndIncrement);
             } catch (Exception e) {
-                skipped.getAndIncrement();
-                log.warn("Skip raw event {} because of {}", value, e.getMessage());
+                skipCount.getAndIncrement();
+                log.warn("Skip raw event {} because of {}", rawEventStr, e.getMessage());
             }
         }
 
         if (!batch.isEmpty()) {
-            writer.writeBatch(batch);
+            eventWriter.write(batch);
         }
 
-        // Если вставка упадет - ack не будет вызван и Kafka переотдаст батч.
-        // Таким образом реализуем семантику (at-least-once).
+        // Если вставка упадет - ack не будет вызван и Kafka переотдаст эвенты.
+        // Таким образом реализуется семантика (at-least-once).
         ack.acknowledge();
-        log.info("Ingestor batch: total={}, inserted={}, skipped={}", values.size(), batch.size(), skipped.get());
+        log.info("Processed batch: total={}, inserted={}, skipped={}", rawEvents.size(), batch.size(), skipCount.get());
     }
 }

@@ -6,5 +6,5 @@ import ru.vspochernin.ingestor.model.ErrorEvent;
 
 public interface ErrorEventWriter {
 
-    void writeBatch(List<ErrorEvent> events);
+    void write(List<ErrorEvent> events);
 }

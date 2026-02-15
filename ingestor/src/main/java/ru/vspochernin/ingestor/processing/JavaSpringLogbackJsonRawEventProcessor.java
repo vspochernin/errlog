@@ -17,7 +17,7 @@ import ru.vspochernin.ingestor.utils.StringUtils;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class JavaSpringLogbackJsonProcessor implements RawEventProcessor {
+public class JavaSpringLogbackJsonRawEventProcessor implements RawEventProcessor {
 
     private final ObjectMapper objectMapper;
 
@@ -27,32 +27,30 @@ public class JavaSpringLogbackJsonProcessor implements RawEventProcessor {
     }
 
     @Override
-    public Optional<ErrorEvent> processEvent(JsonNode rawEvent) {
+    public Optional<ErrorEvent> process(JsonNode rawEvent) {
         JavaSpringLogbackJsonRawEventDto dto;
         try {
             dto = objectMapper.treeToValue(rawEvent, JavaSpringLogbackJsonRawEventDto.class);
         } catch (JsonProcessingException e) {
-            log.error("Error processing raw event {} because of exception {}", rawEvent, e.getMessage());
+            log.error("Error processing rawEvent={} because of exception {}", rawEvent, e.getMessage());
             return Optional.empty();
         }
 
         return Optional.of(new ErrorEvent(
                 UUID.randomUUID(),
-                dto.timestamp() != 0 ? Instant.ofEpochMilli(dto.timestamp()) : Instant.now(),
-
-                StringUtils.getStringOrDefault(dto.service(), "unknown-service"),
-                StringUtils.getStringOrDefault(dto.level(), "UNKNOWN"),
-                StringUtils.getFirstNonBlankStringOrDefault(dto.formattedMessage(), dto.message(), ""),
+                dto.timestamp() > 0 ? Instant.ofEpochMilli(dto.timestamp()) : Instant.now(),
+                sourceType(),
+                StringUtils.getOrDefault(dto.service(), "unknown-service"),
+                StringUtils.getOrDefault(dto.level(), "UNKNOWN"),
+                StringUtils.getFirstNonBlankOrDefault(dto.formattedMessage(), dto.message(), "empty message"),
                 0L, // TODO: will be implemented in 6.
                 "UNKNOWN", // TODO: will be implemented in 6.
-                sourceType(),
 
                 dto.instance(),
                 dto.serviceVersion(),
                 dto.loggerName(),
                 dto.threadName(),
                 dto.message(),
-
                 dto.throwable() != null ? dto.throwable().className() : null,
                 dto.throwable() != null ? dto.throwable().message() : null,
                 dto.getStacktraceFormatted()));

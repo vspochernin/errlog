@@ -23,12 +23,13 @@ public class ClickHouseEventWriter implements ErrorEventWriter {
             (
                 event_id,
                 timestamp,
+                source_type,
                 service,
                 level,
                 message_formatted,
                 fingerprint,
                 fingerprint_source,
-                source_type,
+            
                 instance,
                 service_version,
                 logger,
@@ -42,7 +43,7 @@ public class ClickHouseEventWriter implements ErrorEventWriter {
             """;
 
     @Override
-    public void writeBatch(List<ErrorEvent> events) {
+    public void write(List<ErrorEvent> events) {
         if (events == null || events.isEmpty()) {
             return;
         }
@@ -54,20 +55,18 @@ public class ClickHouseEventWriter implements ErrorEventWriter {
                 (ps, e) -> {
                     ps.setObject(1, e.eventId());
                     ps.setTimestamp(2, Timestamp.from(e.timestamp()));
-
-                    ps.setString(3, e.service());
-                    ps.setString(4, e.level());
-                    ps.setString(5, e.messageFormatted());
-                    ps.setString(6, Long.toUnsignedString(e.fingerprint())); // UInt64 может не влезть в signed long.
-                    ps.setString(7, e.fingerprintSource());
-                    ps.setString(8, e.sourceType());
+                    ps.setString(3, e.sourceType());
+                    ps.setString(4, e.service());
+                    ps.setString(5, e.level());
+                    ps.setString(6, e.messageFormatted());
+                    ps.setString(7, Long.toUnsignedString(e.fingerprint())); // UInt64.
+                    ps.setString(8, e.fingerprintSource());
 
                     ps.setString(9, e.instance());
                     ps.setString(10, e.serviceVersion());
                     ps.setString(11, e.logger());
                     ps.setString(12, e.thread());
                     ps.setString(13, e.messageTemplate());
-
                     ps.setString(14, e.exceptionClass());
                     ps.setString(15, e.exceptionMessage());
                     ps.setString(16, e.stacktrace());

@@ -3,6 +3,7 @@ package ru.vspochernin.ingestor.processing;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -11,11 +12,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class RawEventProcessorRegistry {
 
-    // Фиктивный тип для неизвестных системе sourceType.
-    static final String UNKNOWN_RAW_EVENT_PROCESSOR_SOURCE_TYPE = "__unknown__";
-
     private final Map<String, RawEventProcessor> bySourceType;
-    private final RawEventProcessor unknownRawEventProcessor;
+    private final RawEventProcessor defaultRawEventProcessor;
 
     public RawEventProcessorRegistry(List<RawEventProcessor> processors) {
         this.bySourceType = processors.stream()
@@ -27,16 +25,13 @@ public class RawEventProcessorRegistry {
                         },
                         HashMap::new));
 
-        this.unknownRawEventProcessor = bySourceType.get(UNKNOWN_RAW_EVENT_PROCESSOR_SOURCE_TYPE);
-        if (unknownRawEventProcessor == null) {
-            throw new IllegalStateException("Can't find unknown raw event processor");
-        }
+        this.defaultRawEventProcessor = Optional.ofNullable(bySourceType.get(UnknownRawEventProcessor.SOURCE_TYPE))
+                .orElseThrow(() -> new IllegalStateException("Can't initialize default raw event processor"));
     }
 
     public RawEventProcessor getProcessor(String sourceType) {
-        if (sourceType == null) {
-            return unknownRawEventProcessor;
-        }
-        return bySourceType.getOrDefault(sourceType, unknownRawEventProcessor);
+        return Optional.ofNullable(sourceType)
+                .map(bySourceType::get)
+                .orElse(defaultRawEventProcessor);
     }
 }

@@ -9,5 +9,5 @@ public interface RawEventProcessor {
 
     String sourceType();
 
-    Optional<ErrorEvent> processEvent(JsonNode rawEvent);
+    Optional<ErrorEvent> process(JsonNode rawEvent);
 }
