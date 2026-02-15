@@ -21,30 +21,39 @@ public class DefaultFingerprintCalculator implements FingerprintCalculator {
         String logger = StringUtils.getOrDefault(event.logger(), "");
         String level = StringUtils.getOrDefault(event.level(), "");
 
-        String prefix = service + "|" + logger + "|" + level;
+        String base;
+        FingerprintSource source;
 
         if (StringUtils.isNotBlank(event.stacktrace())) {
             String exceptionClass = StringUtils.getOrDefault(event.exceptionClass(), "");
-            String stacktraceWithoutDigits = DIGITS.matcher(event.stacktrace()).replaceAll("");
-            String base = prefix + "|" + exceptionClass + "|" + stacktraceWithoutDigits;
-            return new FingerprintResult(hashToUInt64(base), FingerprintSource.STACKTRACE);
+            String stacktraceNoDigits = DIGITS.matcher(event.stacktrace()).replaceAll("");
+
+            base = String.join("|", service, logger, level, exceptionClass, stacktraceNoDigits);
+            source = FingerprintSource.STACKTRACE;
+
+        } else if (StringUtils.isNotBlank(event.messageTemplate())) {
+            base = String.join("|", service, logger, level, event.messageTemplate());
+            source = FingerprintSource.TEMPLATE;
+
+        } else {
+            base = String.join("|", service, logger, level);
+            source = FingerprintSource.MINIMAL;
         }
 
-        if (StringUtils.isNotBlank(event.messageTemplate())) {
-            String base = prefix + "|" + event.messageTemplate();
-            return new FingerprintResult(hashToUInt64(base), FingerprintSource.TEMPLATE);
-        }
-
-        return new FingerprintResult(hashToUInt64(prefix), FingerprintSource.MINIMAL);
+        return new FingerprintResult(hashToLong(base), source);
     }
 
-    private static long hashToUInt64(String base) {
+    private static long hashToLong(String value) {
+        byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
+        byte[] digest = sha256(bytes);
+        return ByteBuffer.wrap(digest, 0, 8).getLong();
+    }
+
+    private static byte[] sha256(byte[] data) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest(base.getBytes(StandardCharsets.UTF_8));
-            return ByteBuffer.wrap(digest, 0, 8).getLong(); // Первые 8 байт хэша.
+            return MessageDigest.getInstance("SHA-256").digest(data);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 algorithm not found", e);
+            throw new IllegalStateException("SHA-256 algorithm can't be found", e);
         }
     }
 }
