@@ -6,6 +6,11 @@ services:
       errlog.collect: "true" # Лейбл для Vector (показывает, что с контейнеров этого сервиса нужно собирать логи).
       errlog.source_type: "java-spring-logback-json" # Лейбл для Vector (с его помощью будет выбираться обработчик).
       errlog.service_version: "${JERRGEN_VERSION:-1.2.345}" # Лейбл для Vector, имитирующий версию сервиса.
+    # Если нужно подключиться дебаггером.
+    #    environment:
+    #      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    #    ports:
+    #      - "5005:5005"
     restart: "unless-stopped"
 
   kafka:
@@ -32,12 +37,12 @@ services:
 
       # Отключаем автоматическое создание топика (будем создавать вручную).
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-    healthcheck:
-      # Проверка успешного запуска (важно, потому что запуски vector и kafka-init зависят от успешного запуска kafka).
+    healthcheck: # Чтобы запускать vector и kafka-init только после успешного запуска kafka.
       test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1" ]
       interval: 5s
       timeout: 5s
       retries: 30
+      start_period: 10s
     restart: "unless-stopped"
 
   kafka-init:
@@ -45,20 +50,10 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-    entrypoint: [ "/opt/kafka/bin/kafka-topics.sh" ]
-    command:
-      - "--bootstrap-server"
-      - "kafka:9092"
-      - "--create"
-      - "--if-not-exists"
-      - "--topic"
-      - "errors-raw"
-      - "--partitions"
-      - "1"
-      - "--replication-factor"
-      - "1"
-      - "--config"
-      - "retention.ms=259200000" # Трое суток.
+    entrypoint: [ "/bin/sh", "-lc" ]
+    command: [ "sh /init/init.sh" ]
+    volumes:
+      - ./docker/kafka/init.sh:/init/init.sh:ro
     restart: "no"
 
   vector:
@@ -74,30 +69,76 @@ services:
     user: "0:0" # Нюансы докер групп. Гарантируем доступ Vector к сокету докера (запускаем от рута).
     restart: "unless-stopped"
 
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.1
+    environment:
+      CLICKHOUSE_USER: "errlog_ch_user"
+      CLICKHOUSE_PASSWORD: "errlog_ch_password"
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1" # Для корректного создания пользователя.
+    ports:
+      - "8123:8123" # Порт для HTTP запросов.
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    healthcheck: # Чтобы запускать ingestor и clickhouse-init только после успешного старта clickhouse.
+      test: [ "CMD-SHELL", "clickhouse-client --host localhost --user errlog_ch_user --password errlog_ch_password --query 'SELECT 1' >/dev/null 2>&1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    restart: "unless-stopped"
+
+  clickhouse-init:
+    image: clickhouse/clickhouse-server:26.1
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    entrypoint: [ "/bin/sh", "-lc" ]
+    command: [ "clickhouse-client --host clickhouse --user errlog_ch_user --password errlog_ch_password --multiquery < /init/init.sql" ]
+    volumes:
+      - ./docker/clickhouse/init.sql:/init/init.sql:ro
+    restart: "no"
+
+  ingestor:
+    build:
+      context: ./ingestor
+    depends_on: # Ждем, когда стартуют Kafka и ClickHouse.
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      clickhouse:
+        condition: service_healthy
+      clickhouse-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      KAFKA_TOPIC: "errors-raw"
+      KAFKA_GROUP_ID: "errlog-ingestor"
+      CLICKHOUSE_JDBC_URL: "jdbc:clickhouse://clickhouse:8123/errlog_ch"
+      CLICKHOUSE_USER: "errlog_ch_user"
+      CLICKHOUSE_PASSWORD: "errlog_ch_password"
+    # Если нужно подключиться дебаггером.
+    #      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    #    ports:
+    #      - "5005:5005"
+    restart: "unless-stopped"
+
   postgres:
     image: postgres:18.1
     environment:
-      POSTGRES_DB: "errlog"
-      POSTGRES_USER: "errlog"
-      POSTGRES_PASSWORD: "errlog"
+      POSTGRES_DB: "errlog_pg"
+      POSTGRES_USER: "errlog_pg_user"
+      POSTGRES_PASSWORD: "errlog_pg_password"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
-    restart: "unless-stopped"
-
-  clickhouse:
-    image: clickhouse/clickhouse-server:26.1
-    environment:
-      CLICKHOUSE_DB: "errlog"
-      CLICKHOUSE_USER: "errlog"
-      CLICKHOUSE_PASSWORD: "errlog"
-      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
-    ports:
-      - "8123:8123" # Порт для HTTP запросов.
-      - "9000:9000" # Порт для клиентов.
-    volumes:
-      - clickhouse_data:/var/lib/clickhouse
+    healthcheck: # Чтобы запускать api только после успешного старта postgres.
+      test: [ "CMD-SHELL", "pg_isready -U errlog_pg_user -d errlog_pg -h localhost >/dev/null 2>&1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
     restart: "unless-stopped"
 
 volumes:

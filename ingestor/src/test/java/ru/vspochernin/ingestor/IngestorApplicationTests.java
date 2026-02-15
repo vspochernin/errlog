@@ -1,10 +1,10 @@
-package ru.vspochernin.jerrgen;
+package ru.vspochernin.ingestor;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class JerrgenApplicationTests {
+class IngestorApplicationTests {
 
     @Test
     void contextLoads() {
