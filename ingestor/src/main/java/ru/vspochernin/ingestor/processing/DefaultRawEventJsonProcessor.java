@@ -38,7 +38,7 @@ public class DefaultRawEventJsonProcessor implements RawEventJsonProcessor {
             return Optional.empty();
         }
 
-        String sourceType = rawEvent.get("sourceType").asText();
+        String sourceType = rawEvent.path("sourceType").asText(null);
         RawEventNormalizer normalizer = normalizerRegistry.getNormalizer(sourceType);
 
         Optional<NormalizedErrorEvent> normalizedErrorEventO;
