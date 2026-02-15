@@ -6,7 +6,9 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import ru.vspochernin.ingestor.fingerprint.FingerprintResult;
 import ru.vspochernin.ingestor.model.ErrorEvent;
+import ru.vspochernin.ingestor.model.NormalizedErrorEvent;
 
 @Component
 @RequiredArgsConstructor
@@ -52,24 +54,27 @@ public class ClickHouseEventWriter implements ErrorEventWriter {
                 INSERT_SQL,
                 events,
                 INSERT_BATCH_SIZE,
-                (ps, e) -> {
-                    ps.setObject(1, e.eventId());
-                    ps.setTimestamp(2, Timestamp.from(e.timestamp()));
-                    ps.setString(3, e.sourceType());
-                    ps.setString(4, e.service());
-                    ps.setString(5, e.level());
-                    ps.setString(6, e.messageFormatted());
-                    ps.setString(7, Long.toUnsignedString(e.fingerprint())); // UInt64.
-                    ps.setString(8, e.fingerprintSource());
+                (ps, errorEvent) -> {
+                    NormalizedErrorEvent normalizedErrorEvent = errorEvent.normalizedErrorEvent();
+                    FingerprintResult fingerprintResult = errorEvent.fingerprintResult();
 
-                    ps.setString(9, e.instance());
-                    ps.setString(10, e.serviceVersion());
-                    ps.setString(11, e.logger());
-                    ps.setString(12, e.thread());
-                    ps.setString(13, e.messageTemplate());
-                    ps.setString(14, e.exceptionClass());
-                    ps.setString(15, e.exceptionMessage());
-                    ps.setString(16, e.stacktrace());
+                    ps.setObject(1, errorEvent.eventId());
+                    ps.setTimestamp(2, Timestamp.from(normalizedErrorEvent.timestamp()));
+                    ps.setString(3, normalizedErrorEvent.sourceType());
+                    ps.setString(4, normalizedErrorEvent.service());
+                    ps.setString(5, normalizedErrorEvent.level());
+                    ps.setString(6, normalizedErrorEvent.messageFormatted());
+                    ps.setString(7, Long.toUnsignedString(fingerprintResult.fingerprint())); // UInt64.
+                    ps.setString(8, fingerprintResult.fingerprintSource().name());
+
+                    ps.setString(9, normalizedErrorEvent.instance());
+                    ps.setString(10, normalizedErrorEvent.serviceVersion());
+                    ps.setString(11, normalizedErrorEvent.logger());
+                    ps.setString(12, normalizedErrorEvent.thread());
+                    ps.setString(13, normalizedErrorEvent.messageTemplate());
+                    ps.setString(14, normalizedErrorEvent.exceptionClass());
+                    ps.setString(15, normalizedErrorEvent.exceptionMessage());
+                    ps.setString(16, normalizedErrorEvent.stacktrace());
                 }
         );
     }
