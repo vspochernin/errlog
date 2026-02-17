@@ -50,6 +50,7 @@ public class DefaultRawEventJsonProcessor implements RawEventJsonProcessor {
         }
 
         if (normalizedErrorEventO.isEmpty()) {
+            log.warn("Skip rawEvent={} because of normalizer returns empty", rawEvent);
             return Optional.empty();
         }
         NormalizedErrorEvent normalizedErrorEvent = normalizedErrorEventO.get();

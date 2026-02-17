@@ -23,25 +23,25 @@ public class RawEventJsonKafkaListener {
 
     @KafkaListener(topics = "${KAFKA_TOPIC}")
     public void listen(List<String> rawEventJsons, Acknowledgment ack) {
-        List<ErrorEvent> batch = new ArrayList<>(rawEventJsons.size());
+        List<ErrorEvent> events = new ArrayList<>(rawEventJsons.size());
         AtomicInteger skipCount = new AtomicInteger();
 
         for (String rawEventJson : rawEventJsons) {
             rawEventJsonProcessor.process(rawEventJson)
-                    .ifPresentOrElse(batch::add, skipCount::incrementAndGet);
+                    .ifPresentOrElse(events::add, skipCount::incrementAndGet);
         }
 
-        if (!batch.isEmpty()) {
-            eventWriter.write(batch);
+        if (!events.isEmpty()) {
+            eventWriter.write(events);
         }
 
         // Если вставка упадет - ack не будет вызван и Kafka переотдаст эвенты.
         // Таким образом реализуется семантика (at-least-once).
         ack.acknowledge();
         log.info(
-                "Processed batch: total={}, inserted={}, skipped={}",
+                "Processed batch of rawEventJsons: total={}, inserted={}, skipped={}",
                 rawEventJsons.size(),
-                batch.size(),
+                events.size(),
                 skipCount.get());
     }
 }

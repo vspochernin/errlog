@@ -30,11 +30,9 @@ public class DefaultFingerprintCalculator implements FingerprintCalculator {
 
             base = String.join("|", service, logger, level, exceptionClass, stacktraceNoDigits);
             source = FingerprintSource.STACKTRACE;
-
         } else if (StringUtils.isNotBlank(event.messageTemplate())) {
             base = String.join("|", service, logger, level, event.messageTemplate());
             source = FingerprintSource.TEMPLATE;
-
         } else {
             base = String.join("|", service, logger, level);
             source = FingerprintSource.MINIMAL;
