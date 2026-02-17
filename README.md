@@ -3,85 +3,85 @@
 Выпускная квалификационная работа «Сервис сбора и анализа ошибок информационных систем». 2-й семестр 2-го курса МИФИ.
 ИИКС РПО (2025-2026 уч. г).
 
-## Запуск стенда
+## Быстрый старт
 
-- Запустить стенд:
-  - `docker compose up -d --build`
+1) Поднять стенд:
+```bash
+docker compose up -d --build
+```
 
-Сервисы в стенде:
-- `jerrgen` - генератор логов (INFO/WARN/ERROR), далее по пайплайну берутся только WARN/ERROR.
-- `vector` - читает docker logs генераторов, фильтрует/обогащает и пишет в Kafka.
-- `kafka` + `kafka-init` - Kafka (KRaft single-node) и одноразовая инициализация топика.
-- `clickhouse` + `clickhouse-init` - ClickHouse и одноразовая инициализация БД/таблиц.
-- `postgres` - пока "в холостую" (под будущий API).
-- `ingestor` - читает `errors-raw` топик из Kafka и батчами пишет события в ClickHouse (at-least-once).
+2) Посмотреть, что init-контейнеры отработали, а остальные успешно работают:
+```bash
+docker compose ps -a
+```
+Ожидаемо: `kafka-init` и `clickhouse-init` завершены (`Exited (0)`), остальные сервисы `Up`.
 
----
+## Что внутри (MVP)
 
-## Этап 1
+- `jerrgen` - генератор логов (в stdout JSON lines).
+- `vector` - читает docker-логи контейнеров генераторов по label `errlog.collect=true`, фильтрует WARN/ERROR, обогащает метаданными, пишет в Kafka.
+- `kafka` + `kafka-init` - Kafka и одноразовое создание топика `errors-raw`.
+- `clickhouse` + `clickhouse-init` - ClickHouse и одноразовая инициализация `errlog_ch` + таблицы `error_events`.
+- `ingestor` - читает `errors-raw` батчами, делает нормализацию, вычисление фингерпринта, вставку в ClickHouse и ручной ack для кафки.
+- `postgres` - поднят для будущего API (пока без активного использования).
 
-### Реализовано
+## Пайплайн данных
 
-- Генератор ошибок запускается через Docker Compose и пишет INFO/WARN/ERROR события в ожидаемом JSON формате.
+`Generators (stdout json)` -> `Vector` -> `Kafka (errors-raw)` -> `Ingestor` -> `ClickHouse (errlog_ch.error_events)`
 
-### Проверка
+Семантика: Ingestor делает `ack` только после успешной вставки в ClickHouse -> **at-least-once** (дубликаты допустимы).
 
-- Запустить стенд `docker compose up -d --build`.
-- Проверить наличие генерируемых событий: `docker compose logs -f jerrgen`
+## Fingerprint (упрощённый алгоритм)
 
----
+Основа всегда начинается с: `service|logger|level`.
 
-## Этап 2
+- Если есть `stacktrace`: `service|logger|level|exceptionClass|stacktraceWithoutDigits` и `fingerprintSource=STACKTRACE`.
+- Иначе если есть `messageTemplate`: `service|logger|level|messageTemplate` и `fingerprintSource=TEMPLATE`.
+- Иначе: `service|logger|level` и `fingerprintSource=MINIMAL`.
 
-### Реализовано
+Хэш: SHA-256, первые 8 байт -> `UInt64` в ClickHouse.
 
-- Стенд, состоящий из генератора ошибок, Vector, Kafka, ClickHouse, PostgreSQL запускается через Docker Compose.
-- Генератор ошибок (jerrgen) пишет JSON события ошибок в stdout.
-- Vector читает события из docker-логов генератора, оставляет только WARN и ERROR события и обогащает их метаданными контейнера.
-- События попадают в Kafka топик `errors-raw` (который создается сервисом `kafka-init`).
-- ClickHouse и PostgreSQL поднимаются и успешно работают (на этом этапе “в холостую”).
+## Проверка стенда
 
-### Проверка
+### 1) Проверить, что в Kafka идут raw события
 
-- Запустить стенд `docker compose up -d --build`.
-- Проверить наличие событий ошибок в Kafka:
-  - `docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic errors-raw --from-beginning`
-- Проверить работу ClickHouse:
-  - `curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%201"`
-- Проверить работу PostgreSQL:
-  - `docker compose exec postgres psql -U errlog_pg_user -d errlog_pg -c "select 1;"`
+```bash
+docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic errors-raw --from-beginning
+```
+Выведет сырые события (уже отфильтрованные/обогащённые Vector).
 
----
+### 2) Посмотреть логи ingestor
 
-## Этап 3 (недели 3–4)
+```bash
+docker compose logs -f ingestor
+```
+Должны быть логи об успешных вставках батчей.
 
-### Реализовано
 
-- Добавлен сервис `clickhouse-init`, который инициализирует базу `errlog_ch` и таблицу `errlog_ch.error_events` через `init.sql`.
-- Добавлен Ingestor:
-  - Читает `errors-raw` из Kafka.
-  - Обрабатывает события батчами (batch listener).
-  - Нормализует raw события в модель `ErrorEvent` через интерфейсы (стратегия по `sourceType`).
-  - Пишет `ErrorEvent` в ClickHouse батчами через JDBC.
-  - Делает manual ack только после успешной вставки (семантика at-least-once, дубликаты допустимы).
-- Fingerprint пока в режиме fallback:
-  - `fingerprint = 0`
-  - `fingerprintSource = UNKNOWN`
-  - (алгоритм fingerprint будет реализован на следующем этапе)
+### 3) Проверить ClickHouse (таблица и данные)
 
-### Проверка
+- Проверить, что ClickHouse жив:
+```bash
+curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%201"
+```
 
-- Запустить стенд:
-  - `docker compose up -d --build`
-- Проверить Kafka (видим raw события):
-  - `docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic errors-raw --from-beginning`
+- Количество событий:
+```bash
+curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%20count()%20FROM%20errlog_ch.error_events"
+```
 
-- Проверить ClickHouse (таблица/данные):
-  - `curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SHOW%20TABLES%20FROM%20errlog_ch"` - получить список таблиц.
-  - `curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%20count()%20FROM%20errlog_ch.error_events"` получить количество записанных эвентов.
-  - `curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%20timestamp,service,level,fingerprint,fingerprint_source%20FROM%20errlog_ch.error_events%20ORDER%20BY%20timestamp%20DESC%20LIMIT%205"` - вывести последние 5 эвентов.
-- Проверить Ingestor (логи):
-  - `docker compose logs -f ingestor`
-- Быстрые аналитические запросы (MVP):
-  - `curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%20service,level,count()%20c%20FROM%20errlog_ch.error_events%20GROUP%20BY%20service,level%20ORDER%20BY%20c%20DESC"` - получить эвенты, сгруппированные по сервису и уровню лога.
-  - `curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%20toStartOfMinute(timestamp)%20m,count()%20c%20FROM%20errlog_ch.error_events%20GROUP%20BY%20m%20ORDER%20BY%20m%20DESC%20LIMIT%2010"` - получить количество ошибок в бакетах по 20 минут.
+- Распределение по источнику fingerprint:
+```bash
+curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%20fingerprint_source,%20count()%20c%20FROM%20errlog_ch.error_events%20GROUP%20BY%20fingerprint_source%20ORDER%20BY%20c%20DESC"
+```
+
+- Топ повторяющихся fingerprint:
+```bash
+curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%20fingerprint,%20count()%20c%20FROM%20errlog_ch.error_events%20GROUP%20BY%20fingerprint%20ORDER%20BY%20c%20DESC%20LIMIT%2020"
+```
+
+### 4) Проверить Postgres
+
+```bash
+docker compose exec postgres psql -U errlog_pg_user -d errlog_pg -c "select 1;"
+```

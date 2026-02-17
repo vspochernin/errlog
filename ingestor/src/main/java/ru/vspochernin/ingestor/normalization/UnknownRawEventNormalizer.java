@@ -1,15 +1,15 @@
-package ru.vspochernin.ingestor.processing;
+package ru.vspochernin.ingestor.normalization;
 
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.vspochernin.ingestor.model.ErrorEvent;
+import ru.vspochernin.ingestor.model.NormalizedErrorEvent;
 
 @Component
 @Slf4j
-public class UnknownRawEventProcessor implements RawEventProcessor {
+public class UnknownRawEventNormalizer implements RawEventNormalizer {
 
     // Фиктивный тип для неизвестных системе sourceType.
     static final String SOURCE_TYPE = "__unknown__";
@@ -20,9 +20,9 @@ public class UnknownRawEventProcessor implements RawEventProcessor {
     }
 
     @Override
-    public Optional<ErrorEvent> process(JsonNode rawEvent) {
+    public Optional<NormalizedErrorEvent> normalize(JsonNode rawEvent) {
         String sourceType = rawEvent.path("sourceType").asText(SOURCE_TYPE);
-        log.error("Unknown sourceType={}, rawEvent={} drop event", sourceType, rawEvent);
+        log.error("Unknown sourceType={}, skip rawEvent={}", sourceType, rawEvent);
         return Optional.empty();
     }
 }

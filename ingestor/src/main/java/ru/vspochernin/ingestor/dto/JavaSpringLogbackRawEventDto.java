@@ -5,7 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.vspochernin.ingestor.utils.StringUtils;
 
-public record JavaSpringLogbackJsonRawEventDto(
+public record JavaSpringLogbackRawEventDto(
 
         @JsonProperty("formattedMessage")
         String formattedMessage,

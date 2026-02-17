@@ -1,8 +1,7 @@
-package ru.vspochernin.ingestor.processing;
+package ru.vspochernin.ingestor.normalization;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,41 +9,38 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.vspochernin.ingestor.dto.JavaSpringLogbackJsonRawEventDto;
-import ru.vspochernin.ingestor.model.ErrorEvent;
+import ru.vspochernin.ingestor.dto.JavaSpringLogbackRawEventDto;
+import ru.vspochernin.ingestor.model.NormalizedErrorEvent;
 import ru.vspochernin.ingestor.utils.StringUtils;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class JavaSpringLogbackJsonRawEventProcessor implements RawEventProcessor {
+public class JavaSpringLogbackRawEventNormalizer implements RawEventNormalizer {
 
     private final ObjectMapper objectMapper;
 
     @Override
     public String sourceType() {
-        return "java-spring-logback-json";
+        return "java-spring-logback";
     }
 
     @Override
-    public Optional<ErrorEvent> process(JsonNode rawEvent) {
-        JavaSpringLogbackJsonRawEventDto dto;
+    public Optional<NormalizedErrorEvent> normalize(JsonNode rawEvent) {
+        JavaSpringLogbackRawEventDto dto;
         try {
-            dto = objectMapper.treeToValue(rawEvent, JavaSpringLogbackJsonRawEventDto.class);
+            dto = objectMapper.treeToValue(rawEvent, JavaSpringLogbackRawEventDto.class);
         } catch (JsonProcessingException e) {
-            log.error("Error processing rawEvent={} because of exception {}", rawEvent, e.getMessage());
+            log.error("Json processing exception on rawEvent={} because of {}", rawEvent, e.getMessage());
             return Optional.empty();
         }
 
-        return Optional.of(new ErrorEvent(
-                UUID.randomUUID(),
+        return Optional.of(new NormalizedErrorEvent(
                 dto.timestamp() > 0 ? Instant.ofEpochMilli(dto.timestamp()) : Instant.now(),
                 sourceType(),
                 StringUtils.getOrDefault(dto.service(), "unknown-service"),
                 StringUtils.getOrDefault(dto.level(), "UNKNOWN"),
                 StringUtils.getFirstNonBlankOrDefault(dto.formattedMessage(), dto.message(), "empty message"),
-                0L, // TODO: will be implemented in 6.
-                "UNKNOWN", // TODO: will be implemented in 6.
 
                 dto.instance(),
                 dto.serviceVersion(),
