@@ -1,3 +1,4 @@
+-- TODO: think about full script later.
 CREATE TABLE users
 (
     id       BIGSERIAL PRIMARY KEY,
