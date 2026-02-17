@@ -1,3 +1,14 @@
 spring:
   application:
     name: errapi
+  datasource: # Основной datasource (postgres).
+    url: ${POSTGRES_JDBC_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    open-in-view: false # Чтобы сессия не держалась до конца обработки запроса (защита от N+1).
+    hibernate:
+      ddl-auto: validate # Валидация схемы БД моделям.
+  flyway: # Flyway использует основной datasource (postgres).
+    enabled: true
+    locations: classpath:db/migration

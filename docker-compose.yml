@@ -141,6 +141,27 @@ services:
       start_period: 10s
     restart: "unless-stopped"
 
+  errapi:
+    build:
+      context: ./errapi
+    depends_on: # Ждем, когда стартуют postgres и clickhouse.
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      clickhouse-init:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_JDBC_URL: "jdbc:postgresql://postgres:5432/errlog_pg"
+      POSTGRES_USER: "errlog_pg_user"
+      POSTGRES_PASSWORD: "errlog_pg_password"
+      CLICKHOUSE_JDBC_URL: "jdbc:clickhouse://clickhouse:8123/errlog_ch"
+      CLICKHOUSE_USER: "errlog_ch_user"
+      CLICKHOUSE_PASSWORD: "errlog_ch_password"
+    ports:
+      - "8080:8080"
+    restart: "unless-stopped"
+
 volumes:
   postgres_data:
   clickhouse_data:
