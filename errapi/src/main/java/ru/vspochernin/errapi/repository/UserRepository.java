@@ -1,0 +1,18 @@
+package ru.vspochernin.errapi.repository;
+
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import ru.vspochernin.errapi.model.User;
+import ru.vspochernin.errapi.model.UserRole;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    Optional<User> findByLogin(String login);
+
+    boolean existsByLogin(String login);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByRole(UserRole role);
+}
