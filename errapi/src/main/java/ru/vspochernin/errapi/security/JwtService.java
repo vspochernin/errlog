@@ -1,8 +1,8 @@
 package ru.vspochernin.errapi.security;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
 import java.time.Instant;
+import java.util.Date;
 
 import javax.crypto.SecretKey;
 
