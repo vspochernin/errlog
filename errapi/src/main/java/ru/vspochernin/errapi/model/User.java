@@ -1,7 +1,5 @@
 package ru.vspochernin.errapi.model;
 
-import java.time.ZonedDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,34 +8,29 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 64)
     private String login;
-    @Column(nullable = false, unique = true)
+
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
-    @Column(nullable = false)
+
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 32)
     private UserRole role;
-
-    @Column(nullable = false)
-    private boolean canSearch;
-
-    @Column(nullable = false)
-    private boolean isActive;
-
-    @Column(nullable = false)
-    private ZonedDateTime createdAt;
 }
