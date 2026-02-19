@@ -1,0 +1,56 @@
+package ru.vspochernin.errapi.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import ru.vspochernin.errapi.dto.auth.LoginRequest;
+import ru.vspochernin.errapi.dto.auth.RegisterRequest;
+import ru.vspochernin.errapi.dto.auth.TokenResponse;
+import ru.vspochernin.errapi.dto.auth.UserDto;
+import ru.vspochernin.errapi.model.User;
+import ru.vspochernin.errapi.model.UserRole;
+import ru.vspochernin.errapi.repository.UserRepository;
+import ru.vspochernin.errapi.security.JwtService;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+
+    public UserDto register(RegisterRequest request) {
+        if (userRepository.existsByLogin(request.login())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Login already exists");
+        }
+        if (userRepository.existsByEmail(request.email())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+        }
+
+        User user = new User();
+        user.setLogin(request.login());
+        user.setEmail(request.email());
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setRole(UserRole.NONE);
+
+        user = userRepository.save(user);
+        return new UserDto(user.getId(), user.getLogin(), user.getEmail(), user.getRole());
+    }
+
+    public TokenResponse login(LoginRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.login(), request.password()));
+
+        User user = userRepository.findByLogin(request.login())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+
+        String token = jwtService.generateToken(user.getLogin(), user.getRole().name());
+        return new TokenResponse(token);
+    }
+}
