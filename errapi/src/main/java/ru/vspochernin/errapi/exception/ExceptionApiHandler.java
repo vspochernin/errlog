@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ExceptionApiHandler {
 
     @ExceptionHandler(ErrapiException.class)
-    public ResponseEntity<ErrorMessage> tesseractException(ErrapiException exception) {
+    public ResponseEntity<ErrorMessage> errapiException(ErrapiException exception) {
         return ResponseEntity
                 .status(exception.getErrorType().getHttpStatus())
                 .body(ErrorMessage.fromErrapiException(exception));
@@ -24,7 +24,7 @@ public class ExceptionApiHandler {
         ErrapiErrorType errorType = ErrapiErrorType.BAD_CREDENTIALS;
         return ResponseEntity
                 .status(errorType.getHttpStatus())
-                .body(ErrorMessage.fromErrorTypeWithAdditionalInfo(errorType, exception.toString()));
+                .body(ErrorMessage.fromErrorTypeWithAdditionalInfo(errorType, exception.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -32,7 +32,7 @@ public class ExceptionApiHandler {
         ErrapiErrorType errorType = ErrapiErrorType.BAD_REQUEST_BODY;
         return ResponseEntity
                 .status(errorType.getHttpStatus())
-                .body(ErrorMessage.fromErrorTypeWithAdditionalInfo(errorType, exception.toString()));
+                .body(ErrorMessage.fromErrorTypeWithAdditionalInfo(errorType, exception.getMessage()));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -40,7 +40,7 @@ public class ExceptionApiHandler {
         ErrapiErrorType errorType = ErrapiErrorType.BAD_REQUEST_BODY;
         return ResponseEntity
                 .status(errorType.getHttpStatus())
-                .body(ErrorMessage.fromErrorTypeWithAdditionalInfo(errorType, exception.toString()));
+                .body(ErrorMessage.fromErrorTypeWithAdditionalInfo(errorType, exception.getMessage()));
     }
 
     @ExceptionHandler(NumberFormatException.class)
@@ -48,7 +48,7 @@ public class ExceptionApiHandler {
         ErrapiErrorType errorType = ErrapiErrorType.BAD_REQUEST_BODY;
         return ResponseEntity
                 .status(errorType.getHttpStatus())
-                .body(ErrorMessage.fromErrorTypeWithAdditionalInfo(errorType, exception.toString()));
+                .body(ErrorMessage.fromErrorTypeWithAdditionalInfo(errorType, exception.getMessage()));
     }
 
     @ExceptionHandler(NoSuchElementException.class)
@@ -56,6 +56,6 @@ public class ExceptionApiHandler {
         ErrapiErrorType errorType = ErrapiErrorType.NOT_FOUND;
         return ResponseEntity
                 .status(errorType.getHttpStatus())
-                .body(ErrorMessage.fromErrorTypeWithAdditionalInfo(errorType, exception.toString()));
+                .body(ErrorMessage.fromErrorTypeWithAdditionalInfo(errorType, exception.getMessage()));
     }
 }
