@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
         bearerFormat = "JWT")
 public class OpenApiConfig {
 
-    // Чтобы Swagger начал прикревлять токен к запросам.
+    // Чтобы Swagger начал прикреплять токен к запросам.
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()

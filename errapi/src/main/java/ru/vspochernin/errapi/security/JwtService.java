@@ -40,7 +40,7 @@ public class JwtService {
                 .setSubject(login)
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(exp))
-                .claim("role", role)
+                .claim("role", role) // TODO: мб убрать отсюда role.
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }

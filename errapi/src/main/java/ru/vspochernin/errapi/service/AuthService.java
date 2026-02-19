@@ -47,6 +47,7 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.login(), request.password()));
 
+        // TODO: мб убрать лишний запрос.
         User user = userRepository.findByLogin(request.login())
                 .orElseThrow(() -> new ErrapiException(ErrapiErrorType.BAD_CREDENTIALS));
 
