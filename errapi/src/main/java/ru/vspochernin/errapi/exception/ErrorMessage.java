@@ -20,4 +20,8 @@ public record ErrorMessage(
                 errorType.name(),
                 errapiException.getAdditionalInfo());
     }
+
+    public static ErrorMessage fromErrorType(ErrapiErrorType errorType) {
+        return new ErrorMessage(errorType.getId(), errorType.getDescription(), errorType.name(), "");
+    }
 }

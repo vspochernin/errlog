@@ -19,6 +19,10 @@ public enum ErrapiErrorType {
     NOT_FOUND(8, "Запрашиваемый элемент не найден", HttpStatus.NOT_FOUND),
     PASSWORD_DOES_NOT_MATCH(9, "Введенный пароль не совпадает со старым", HttpStatus.UNAUTHORIZED),
     INCORRECT_ROLE_CHANGE(10, "Некорректное изменение роли", HttpStatus.FORBIDDEN),
+    AUTH_REQUIRED(11, "Требуется аутентификация", HttpStatus.UNAUTHORIZED),
+    FORBIDDEN(12, "Недостаточно прав", HttpStatus.FORBIDDEN),
+    INVALID_TOKEN(13, "Некорректный токен", HttpStatus.UNAUTHORIZED),
+    BAD_REQUEST_QUERY(14, "Некорректные параметры запроса", HttpStatus.BAD_REQUEST),
     ;
 
     private final int id;

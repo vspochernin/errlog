@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import ru.vspochernin.errapi.exception.ErrapiErrorType;
 
 @Component
 @RequiredArgsConstructor
@@ -37,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = header.substring("Bearer ".length()).trim();
         if (!jwtService.isValid(token)) {
+            request.setAttribute(JsonAuthenticationEntryPoint.ATTR_ERROR_TYPE, ErrapiErrorType.INVALID_TOKEN);
             filterChain.doFilter(request, response);
             return;
         }
@@ -48,6 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 userDetails = userDetailsService.loadUserByUsername(login);
             } catch (UsernameNotFoundException ex) { // На случай, если токен валидный, но пользователя нет.
+                request.setAttribute(JsonAuthenticationEntryPoint.ATTR_ERROR_TYPE, ErrapiErrorType.AUTH_REQUIRED);
                 filterChain.doFilter(request, response);
                 return;
             }

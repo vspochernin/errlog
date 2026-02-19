@@ -5,14 +5,12 @@ import lombok.Getter;
 @Getter
 public class ErrapiException extends RuntimeException {
 
-    private static final String DEFAULT_ADDITIONAL_INFO = "";
-
     private final ErrapiErrorType errorType;
     private final String additionalInfo;
 
     public ErrapiException(ErrapiErrorType errorType) {
         this.errorType = errorType;
-        this.additionalInfo = DEFAULT_ADDITIONAL_INFO;
+        this.additionalInfo = "";
     }
 
     public ErrapiException(ErrapiErrorType errorType, String additionalInfo) {
