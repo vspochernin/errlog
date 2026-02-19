@@ -40,6 +40,6 @@ public class UserAdminController {
             @RequestParam("role") UserRole role,
             @AuthenticationPrincipal AuthUserDetails actor)
     {
-        return userAdminService.changeRole(id, role, actor.getRole());
+        return userAdminService.changeRole(id, role, actor);
     }
 }

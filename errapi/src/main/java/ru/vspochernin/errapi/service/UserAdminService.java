@@ -10,6 +10,7 @@ import ru.vspochernin.errapi.dto.auth.UserDto;
 import ru.vspochernin.errapi.model.User;
 import ru.vspochernin.errapi.model.UserRole;
 import ru.vspochernin.errapi.repository.UserRepository;
+import ru.vspochernin.errapi.security.AuthUserDetails;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +28,13 @@ public class UserAdminService {
         return UserDto.fromUser(findUserByIdOrThrow(id));
     }
 
-    public UserDto changeRole(long targetUserId, UserRole newRole, UserRole actorRole) {
+    public UserDto changeRole(long targetUserId, UserRole newRole, AuthUserDetails actor) {
+        long actorId = actor.getId();
+        if (targetUserId == actorId) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
+        }
+
+        UserRole actorRole = actor.getRole();
         User target = findUserByIdOrThrow(targetUserId);
 
         if (!actorRole.canModify(target.getRole(), newRole)) {
