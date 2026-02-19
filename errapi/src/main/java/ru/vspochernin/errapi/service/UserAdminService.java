@@ -30,26 +30,12 @@ public class UserAdminService {
     public UserDto changeRole(long targetUserId, UserRole newRole, UserRole actorRole) {
         User target = findUserByIdOrThrow(targetUserId);
 
-        // OWNER'ов никто не может менять.
-        if (target.getRole() == UserRole.OWNER) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OWNER role can't be changed");
-        }
-
-        // ADMIN может назначать только READER и NONE.
-        if (actorRole == UserRole.ADMIN) {
-            if (!(newRole == UserRole.READER || newRole == UserRole.NONE)) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "ADMIN can assign only READER or NONE");
-            }
-        }
-
-        // READER и NONE не может назначать никого.
-        if (actorRole == UserRole.READER || actorRole == UserRole.NONE) {
+        if (!actorRole.canModify(target.getRole(), newRole)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
         }
 
         target.setRole(newRole);
         target = userRepository.save(target);
-
         return UserDto.fromUser(target);
     }
 
