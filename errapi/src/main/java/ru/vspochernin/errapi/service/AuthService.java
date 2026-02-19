@@ -1,16 +1,16 @@
 package ru.vspochernin.errapi.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import ru.vspochernin.errapi.dto.auth.LoginRequest;
 import ru.vspochernin.errapi.dto.auth.RegisterRequest;
 import ru.vspochernin.errapi.dto.auth.LoginResponse;
 import ru.vspochernin.errapi.dto.UserDto;
+import ru.vspochernin.errapi.exception.ErrapiErrorType;
+import ru.vspochernin.errapi.exception.ErrapiException;
 import ru.vspochernin.errapi.model.User;
 import ru.vspochernin.errapi.model.UserRole;
 import ru.vspochernin.errapi.repository.UserRepository;
@@ -27,10 +27,10 @@ public class AuthService {
 
     public UserDto register(RegisterRequest request) {
         if (userRepository.existsByLogin(request.login())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Login already exists");
+            throw new ErrapiException(ErrapiErrorType.LOGIN_EXISTS);
         }
         if (userRepository.existsByEmail(request.email())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+            throw new ErrapiException(ErrapiErrorType.EMAIL_EXISTS);
         }
 
         User user = new User();
@@ -48,7 +48,7 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(request.login(), request.password()));
 
         User user = userRepository.findByLogin(request.login())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+                .orElseThrow(() -> new ErrapiException(ErrapiErrorType.BAD_CREDENTIALS));
 
         String token = jwtService.generateToken(user.getLogin(), user.getRole().name());
         return new LoginResponse(token);

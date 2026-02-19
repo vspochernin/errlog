@@ -1,6 +1,8 @@
 package ru.vspochernin.errapi.model;
 
 import lombok.RequiredArgsConstructor;
+import ru.vspochernin.errapi.exception.ErrapiErrorType;
+import ru.vspochernin.errapi.exception.ErrapiException;
 
 @RequiredArgsConstructor
 public enum UserRole {
@@ -12,27 +14,25 @@ public enum UserRole {
 
     private final int level;
 
-    public boolean canModify(UserRole targetRole, UserRole newRole) {
-        // Нельзя что-либо делать с владельцем.
+    public void validateCanModify(UserRole targetRole, UserRole newRole) {
+        // Нельзя менять роль владельца.
         if (targetRole == OWNER) {
-            return false;
+            throw new ErrapiException(ErrapiErrorType.INCORRECT_ROLE_CHANGE, "Нельзя менять роль владельца");
         }
 
         // Нельзя назначать владельца (назначается один раз при запуске приложения).
         if (newRole == OWNER) {
-            return false;
+            throw new ErrapiException(ErrapiErrorType.INCORRECT_ROLE_CHANGE, "Нельзя назначать владельца");
         }
 
-        // Нельзя трогать роли высшие или равные своему уровню.
+        // Нельзя менять роли высшие или равные своему уровню.
         if (targetRole.level >= this.level) {
-            return false;
+            throw new ErrapiException(ErrapiErrorType.INCORRECT_ROLE_CHANGE, "Нельзя менять высшую или равную роль");
         }
 
         // Нельзя назначать роли высшие или равные своему уровню.
         if (newRole.level >= this.level) {
-            return false;
+            throw new ErrapiException(ErrapiErrorType.INCORRECT_ROLE_CHANGE, "Нельзя назначать высшую или равную роль");
         }
-
-        return true;
     }
 }

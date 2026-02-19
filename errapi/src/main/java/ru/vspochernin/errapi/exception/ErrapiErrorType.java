@@ -18,6 +18,7 @@ public enum ErrapiErrorType {
     BAD_REQUEST_BODY(7, "Некорректное тело запроса", HttpStatus.BAD_REQUEST),
     NOT_FOUND(8, "Запрашиваемый элемент не найден", HttpStatus.NOT_FOUND),
     PASSWORD_DOES_NOT_MATCH(9, "Введенный пароль не совпадает со старым", HttpStatus.UNAUTHORIZED),
+    INCORRECT_ROLE_CHANGE(10, "Некорректное изменение роли", HttpStatus.FORBIDDEN),
     ;
 
     private final int id;
