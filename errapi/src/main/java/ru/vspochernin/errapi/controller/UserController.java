@@ -3,6 +3,8 @@ package ru.vspochernin.errapi.controller;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,21 +27,30 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    List<UserDto> listUsers() {
-        return userService.listUsers();
+    ResponseEntity<List<UserDto>> listUsers() {
+        List<UserDto> response = userService.listUsers();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
     }
 
     @GetMapping("/{id}")
-    public UserDto get(@PathVariable long id) {
-        return userService.getUser(id);
+    public ResponseEntity<UserDto> get(@PathVariable long id) {
+        UserDto response = userService.getUser(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
     }
 
     @PutMapping("/{id}/role")
-    public UserDto changeRole(
+    public ResponseEntity<UserDto> changeRole(
             @PathVariable long id,
             @RequestParam("role") UserRole role,
             @AuthenticationPrincipal AuthUserDetails actor)
     {
-        return userService.changeRole(id, role, actor);
+        UserDto response = userService.changeRole(id, role, actor);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
     }
 }
