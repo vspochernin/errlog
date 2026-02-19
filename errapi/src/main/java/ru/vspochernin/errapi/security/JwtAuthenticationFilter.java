@@ -42,7 +42,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             String login = jwtService.extractLogin(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(login);
+
+            UserDetails userDetails;
+            try {
+                userDetails = userDetailsService.loadUserByUsername(login);
+            } catch (Exception e) { // На случай, если токен валидный, но пользователя нет.
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                     userDetails,
