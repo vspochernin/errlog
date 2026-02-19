@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.vspochernin.errapi.dto.auth.LoginRequest;
 import ru.vspochernin.errapi.dto.auth.RegisterRequest;
-import ru.vspochernin.errapi.dto.auth.TokenResponse;
-import ru.vspochernin.errapi.dto.auth.UserDto;
+import ru.vspochernin.errapi.dto.auth.LoginResponse;
+import ru.vspochernin.errapi.dto.UserDto;
 import ru.vspochernin.errapi.service.AuthService;
 
 @RestController
@@ -23,12 +23,13 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<UserDto> register(@Valid @RequestBody RegisterRequest request) {
-        UserDto created = authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        UserDto response = authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public TokenResponse login(@Valid @RequestBody LoginRequest request) {
-        return authService.login(request);
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

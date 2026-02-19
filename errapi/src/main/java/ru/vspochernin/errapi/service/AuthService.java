@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import ru.vspochernin.errapi.dto.auth.LoginRequest;
 import ru.vspochernin.errapi.dto.auth.RegisterRequest;
-import ru.vspochernin.errapi.dto.auth.TokenResponse;
-import ru.vspochernin.errapi.dto.auth.UserDto;
+import ru.vspochernin.errapi.dto.auth.LoginResponse;
+import ru.vspochernin.errapi.dto.UserDto;
 import ru.vspochernin.errapi.model.User;
 import ru.vspochernin.errapi.model.UserRole;
 import ru.vspochernin.errapi.repository.UserRepository;
@@ -43,7 +43,7 @@ public class AuthService {
         return UserDto.fromUser(user);
     }
 
-    public TokenResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.login(), request.password()));
 
@@ -51,6 +51,6 @@ public class AuthService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
         String token = jwtService.generateToken(user.getLogin(), user.getRole().name());
-        return new TokenResponse(token);
+        return new LoginResponse(token);
     }
 }

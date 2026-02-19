@@ -1,4 +1,4 @@
-package ru.vspochernin.errapi.dto.auth;
+package ru.vspochernin.errapi.dto;
 
 import ru.vspochernin.errapi.model.User;
 import ru.vspochernin.errapi.model.UserRole;

@@ -11,27 +11,27 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.vspochernin.errapi.dto.auth.UserDto;
+import ru.vspochernin.errapi.dto.UserDto;
 import ru.vspochernin.errapi.model.UserRole;
 import ru.vspochernin.errapi.security.AuthUserDetails;
-import ru.vspochernin.errapi.service.UserAdminService;
+import ru.vspochernin.errapi.service.UserService;
 
 @RestController
 @RequestMapping("/api/users")
 @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
 @RequiredArgsConstructor
-public class UserAdminController {
+public class UserController {
 
-    private final UserAdminService userAdminService;
+    private final UserService userService;
 
     @GetMapping
     List<UserDto> listUsers() {
-        return userAdminService.listUsers();
+        return userService.listUsers();
     }
 
     @GetMapping("/{id}")
     public UserDto get(@PathVariable long id) {
-        return userAdminService.getUser(id);
+        return userService.getUser(id);
     }
 
     @PutMapping("/{id}/role")
@@ -40,6 +40,6 @@ public class UserAdminController {
             @RequestParam("role") UserRole role,
             @AuthenticationPrincipal AuthUserDetails actor)
     {
-        return userAdminService.changeRole(id, role, actor);
+        return userService.changeRole(id, role, actor);
     }
 }

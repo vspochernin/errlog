@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import ru.vspochernin.errapi.dto.auth.UserDto;
+import ru.vspochernin.errapi.dto.UserDto;
 import ru.vspochernin.errapi.model.User;
 import ru.vspochernin.errapi.model.UserRole;
 import ru.vspochernin.errapi.repository.UserRepository;
@@ -14,7 +14,7 @@ import ru.vspochernin.errapi.security.AuthUserDetails;
 
 @Service
 @RequiredArgsConstructor
-public class UserAdminService {
+public class UserService {
 
     private final UserRepository userRepository;
 
