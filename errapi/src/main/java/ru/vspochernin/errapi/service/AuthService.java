@@ -40,7 +40,7 @@ public class AuthService {
         user.setRole(UserRole.NONE);
 
         user = userRepository.save(user);
-        return new UserDto(user.getId(), user.getLogin(), user.getEmail(), user.getRole());
+        return UserDto.fromUser(user);
     }
 
     public TokenResponse login(LoginRequest request) {
