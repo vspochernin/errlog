@@ -4,14 +4,18 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.vspochernin.errapi.dto.auth.ChangePasswordRequest;
 import ru.vspochernin.errapi.dto.auth.LoginRequest;
 import ru.vspochernin.errapi.dto.auth.RegisterRequest;
 import ru.vspochernin.errapi.dto.auth.LoginResponse;
 import ru.vspochernin.errapi.dto.UserDto;
+import ru.vspochernin.errapi.security.AuthUserDetails;
 import ru.vspochernin.errapi.service.AuthService;
 
 @RestController
@@ -35,5 +39,16 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
+    }
+
+    @PutMapping("/password")
+    public ResponseEntity<Void> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            @AuthenticationPrincipal AuthUserDetails actor)
+    {
+        authService.changePassword(request, actor);
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .build();
     }
 }

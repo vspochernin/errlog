@@ -5,6 +5,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import ru.vspochernin.errapi.dto.auth.ChangePasswordRequest;
 import ru.vspochernin.errapi.dto.auth.LoginRequest;
 import ru.vspochernin.errapi.dto.auth.RegisterRequest;
 import ru.vspochernin.errapi.dto.auth.LoginResponse;
@@ -14,6 +15,7 @@ import ru.vspochernin.errapi.exception.ErrapiException;
 import ru.vspochernin.errapi.model.User;
 import ru.vspochernin.errapi.model.UserRole;
 import ru.vspochernin.errapi.repository.UserRepository;
+import ru.vspochernin.errapi.security.AuthUserDetails;
 import ru.vspochernin.errapi.security.JwtService;
 
 @Service
@@ -47,11 +49,23 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.login(), request.password()));
 
-        // TODO: мб убрать лишний запрос.
-        User user = userRepository.findByLogin(request.login())
+        String token = jwtService.generateToken(request.login());
+        return new LoginResponse(token);
+    }
+
+    public void changePassword(ChangePasswordRequest request, AuthUserDetails actor) {
+        if (!passwordEncoder.matches(request.oldPassword(), actor.getPassword())) {
+            throw new ErrapiException(ErrapiErrorType.PASSWORD_DOES_NOT_MATCH);
+        }
+
+        if (request.oldPassword().equals(request.newPassword())) {
+            throw new ErrapiException(ErrapiErrorType.INVALID_PASSWORD, "Новый пароль совпадает со старым");
+        }
+
+        User user = userRepository.findById(actor.getId())
                 .orElseThrow(() -> new ErrapiException(ErrapiErrorType.BAD_CREDENTIALS));
 
-        String token = jwtService.generateToken(user.getLogin(), user.getRole().name());
-        return new LoginResponse(token);
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
     }
 }

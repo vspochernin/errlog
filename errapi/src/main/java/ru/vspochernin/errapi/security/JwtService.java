@@ -32,7 +32,7 @@ public class JwtService {
         this.expiresSeconds = expiresSeconds;
     }
 
-    public String generateToken(String login, String role) {
+    public String generateToken(String login) {
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(expiresSeconds);
 
@@ -40,7 +40,6 @@ public class JwtService {
                 .setSubject(login)
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(exp))
-                .claim("role", role) // TODO: мб убрать отсюда role.
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
