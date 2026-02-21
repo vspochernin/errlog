@@ -23,13 +23,16 @@ docker compose ps -a
 - `kafka` + `kafka-init` - Kafka и одноразовое создание топика `errors-raw`.
 - `clickhouse` + `clickhouse-init` - ClickHouse и одноразовая инициализация `errlog_ch` + таблицы `error_events`.
 - `ingestor` - читает `errors-raw` батчами, делает нормализацию, вычисление фингерпринта, вставку в ClickHouse и ручной ack для кафки.
-- `postgres` - поднят для будущего API (пока без активного использования).
+- `postgres` - хранение пользователей/ролей для `errapi` (Flyway + JPA).
+- `errapi` - REST API сервис (JWT + роли, Swagger UI) для работы с пользователями и запросами к ошибкам.
 
 ## Пайплайн данных
 
 `Generators (stdout json)` -> `Vector` -> `Kafka (errors-raw)` -> `Ingestor` -> `ClickHouse (errlog_ch.error_events)`
 
 Семантика: Ingestor делает `ack` только после успешной вставки в ClickHouse -> **at-least-once** (дубликаты допустимы).
+
+Errapi читает пользователей из Postgres и ошибки из ClickHouse.
 
 ## Fingerprint (упрощённый алгоритм)
 
@@ -39,7 +42,7 @@ docker compose ps -a
 - Иначе если есть `messageTemplate`: `service|logger|level|messageTemplate` и `fingerprintSource=TEMPLATE`.
 - Иначе: `service|logger|level` и `fingerprintSource=MINIMAL`.
 
-Хэш: SHA-256, первые 8 байт -> `UInt64` в ClickHouse.
+Хэш: вычисляется в ClickHouse как `xxh3(fingerprintBase)` -> `UInt64`.
 
 ## Проверка стенда
 
@@ -84,4 +87,23 @@ curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&que
 
 ```bash
 docker compose exec postgres psql -U errlog_pg_user -d errlog_pg -c "select 1;"
+```
+
+### 5) Проверить Errapi (Swagger + JWT)
+
+- Swagger UI:
+  - `http://localhost:8080/swagger-ui/index.html`
+
+- OWNER пользователь создаётся при старте `errapi` (если в БД ещё нет владельца) из переменных окружения `ERRLOG_OWNER_*` в `docker-compose.yml`.
+
+- Получить JWT:
+```bash
+curl -X POST "http://localhost:8080/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"login":"owner","password":"owner_password"}'
+```
+
+- Дальше токен можно вставить в Swagger через кнопку **Authorize** или использовать в curl:
+```bash
+curl -H "Authorization: Bearer <token>" http://localhost:8080/api/users
 ```
