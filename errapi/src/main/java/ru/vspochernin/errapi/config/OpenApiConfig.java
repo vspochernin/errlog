@@ -28,7 +28,6 @@ public class OpenApiConfig { // Для появления в Swagger UI кноп
                 if (path.equals("/api/auth/login") || path.equals("/api/auth/register")) {
                     return;
                 }
-
                 item.readOperations().forEach(op ->
                         op.addSecurityItem(new SecurityRequirement().addList("bearerAuth")));
             });
