@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import ru.vspochernin.errapi.exception.ErrorMessage;
 
+// Для записи ответа кастомных Security ошибок в JSON формате.
 @Component
 @RequiredArgsConstructor
 public class SecurityErrorWriter {

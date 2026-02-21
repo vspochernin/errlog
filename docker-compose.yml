@@ -165,9 +165,11 @@ services:
       ERRLOG_OWNER_PASSWORD: "owner_password"
 
       JWT_SECRET: "jwt-secret-that-should-be-more-than-32-symbols"
-      JWT_EXPIRES_SECONDS: "31536000"
+      JWT_EXPIRES_SECONDS: "31536000" # 10 лет.
+    #      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" # Для подключения дебаггером.
     ports:
       - "8080:8080"
+    #      - "5005:5005" # Для подключения дебаггером.
     restart: "unless-stopped"
 
 volumes:

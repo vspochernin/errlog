@@ -4,7 +4,7 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.vspochernin.errapi.dto.UserDto;
+import ru.vspochernin.errapi.dto.auth.UserDto;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
 import ru.vspochernin.errapi.model.User;
@@ -31,18 +31,18 @@ public class UserService {
     public UserDto changeRole(long targetUserId, UserRole newRole, AuthUserDetails actor) {
         long actorId = actor.getId();
         if (targetUserId == actorId) {
-            throw new ErrapiException(ErrapiErrorType.INCORRECT_ROLE_CHANGE, "Нельзя менять свою роль");
+            throw new ErrapiException(ErrapiErrorType.INCORRECT_ROLE_CHANGE, "Нельзя менять роль самому себе");
         }
 
         UserRole actorRole = actor.getRole();
-        User target = findUserByIdOrThrow(targetUserId);
+        User targetUser = findUserByIdOrThrow(targetUserId);
 
-        UserRole targetRole = target.getRole();
+        UserRole targetRole = targetUser.getRole();
         actorRole.validateCanModify(targetRole, newRole);
 
-        target.setRole(newRole);
-        target = userRepository.save(target);
-        return UserDto.fromUser(target);
+        targetUser.setRole(newRole);
+
+        return UserDto.fromUser(userRepository.save(targetUser));
     }
 
     private User findUserByIdOrThrow(long id) {

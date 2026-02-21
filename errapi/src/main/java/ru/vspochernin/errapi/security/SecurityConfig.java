@@ -36,13 +36,15 @@ public class SecurityConfig {
     {
 
         return http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // Отключаем CSRF (у нас stateless REST API).
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(e -> e
-                        .authenticationEntryPoint(jsonAuthenticationEntryPoint)
-                        .accessDeniedHandler(jsonAccessDeniedHandler))
+                        .authenticationEntryPoint(jsonAuthenticationEntryPoint) // Для обработки ошибок аутентификации.
+                        .accessDeniedHandler(jsonAccessDeniedHandler)) // Для обработки ошибок недостатка прав.
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/register",
+                                "/api/auth/login").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",

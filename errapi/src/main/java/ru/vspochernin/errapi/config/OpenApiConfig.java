@@ -7,14 +7,14 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-// Для появления в Swagger UI кнопки "Authorize".
 @Configuration
+// Объявляем в OpenAPI-спецификации схему безопасности с именем bearerAuth.
 @SecurityScheme(
         name = "bearerAuth",
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
         bearerFormat = "JWT")
-public class OpenApiConfig {
+public class OpenApiConfig { // Для появления в Swagger UI кнопки "Authorize" и удобной аутентификации в Swagger.
 
     // Чтобы Swagger начал прикреплять токен к запросам.
     @Bean

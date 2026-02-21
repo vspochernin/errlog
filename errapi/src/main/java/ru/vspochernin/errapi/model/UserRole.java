@@ -7,12 +7,12 @@ import ru.vspochernin.errapi.exception.ErrapiException;
 @RequiredArgsConstructor
 public enum UserRole {
 
-    OWNER(1000),
-    ADMIN(100),
-    READER(10),
+    OWNER(3),
+    ADMIN(2),
+    READER(1),
     NONE(0);
 
-    private final int level;
+    private final int level; // Абсолютный "уровень" роли для сравнения ее "силы" с остальными ролями.
 
     public void validateCanModify(UserRole targetRole, UserRole newRole) {
         // Нельзя менять роль владельца.

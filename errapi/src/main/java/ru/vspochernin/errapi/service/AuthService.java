@@ -9,7 +9,7 @@ import ru.vspochernin.errapi.dto.auth.ChangePasswordRequest;
 import ru.vspochernin.errapi.dto.auth.LoginRequest;
 import ru.vspochernin.errapi.dto.auth.RegisterRequest;
 import ru.vspochernin.errapi.dto.auth.LoginResponse;
-import ru.vspochernin.errapi.dto.UserDto;
+import ru.vspochernin.errapi.dto.auth.UserDto;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
 import ru.vspochernin.errapi.model.User;
@@ -41,31 +41,29 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(UserRole.NONE);
 
-        user = userRepository.save(user);
-        return UserDto.fromUser(user);
+        return UserDto.fromUser(userRepository.save(user));
     }
 
     public LoginResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.login(), request.password()));
 
-        String token = jwtService.generateToken(request.login());
-        return new LoginResponse(token);
+        // Если authenticate() провалится - до сюда не дойдем.
+        return new LoginResponse(jwtService.generateToken(request.login()));
     }
 
     public void changePassword(ChangePasswordRequest request, AuthUserDetails actor) {
         if (!passwordEncoder.matches(request.oldPassword(), actor.getPassword())) {
             throw new ErrapiException(ErrapiErrorType.PASSWORD_DOES_NOT_MATCH);
         }
-
         if (request.oldPassword().equals(request.newPassword())) {
             throw new ErrapiException(ErrapiErrorType.INVALID_PASSWORD, "Новый пароль совпадает со старым");
         }
 
         User user = userRepository.findById(actor.getId())
                 .orElseThrow(() -> new ErrapiException(ErrapiErrorType.BAD_CREDENTIALS));
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword())); // Обновляем пароль.
 
-        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
     }
 }

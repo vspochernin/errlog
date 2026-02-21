@@ -30,12 +30,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException
     {
+        // Проверяем наличие заголовка.
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        // Валидируем токен.
         String token = header.substring("Bearer ".length()).trim();
         if (!jwtService.isValid(token)) {
             request.setAttribute(JsonAuthenticationEntryPoint.ATTR_ERROR_TYPE, ErrapiErrorType.INVALID_TOKEN);
@@ -50,14 +52,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 userDetails = userDetailsService.loadUserByUsername(login);
             } catch (UsernameNotFoundException ex) { // На случай, если токен валидный, но пользователя нет.
-                request.setAttribute(JsonAuthenticationEntryPoint.ATTR_ERROR_TYPE, ErrapiErrorType.AUTH_REQUIRED);
+                request.setAttribute(JsonAuthenticationEntryPoint.ATTR_ERROR_TYPE, ErrapiErrorType.USER_DOES_NOT_EXIST);
                 filterChain.doFilter(request, response);
                 return;
             }
 
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                     userDetails,
-                    null,
+                    null, // Не сохраняем пароль в security контексте.
                     userDetails.getAuthorities());
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(auth);

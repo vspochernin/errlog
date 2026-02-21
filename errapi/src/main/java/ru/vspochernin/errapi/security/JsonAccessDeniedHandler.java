@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrorMessage;
 
+// Кастомный AccessDeniedHandler для формирования json ответа, когда аутентифицированному пользователю не хватает прав.
 @Component
 @RequiredArgsConstructor
 public class JsonAccessDeniedHandler implements AccessDeniedHandler {

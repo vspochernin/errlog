@@ -14,7 +14,7 @@ import ru.vspochernin.errapi.dto.auth.ChangePasswordRequest;
 import ru.vspochernin.errapi.dto.auth.LoginRequest;
 import ru.vspochernin.errapi.dto.auth.RegisterRequest;
 import ru.vspochernin.errapi.dto.auth.LoginResponse;
-import ru.vspochernin.errapi.dto.UserDto;
+import ru.vspochernin.errapi.dto.auth.UserDto;
 import ru.vspochernin.errapi.security.AuthUserDetails;
 import ru.vspochernin.errapi.service.AuthService;
 

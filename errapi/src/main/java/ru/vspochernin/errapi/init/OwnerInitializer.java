@@ -13,21 +13,25 @@ import ru.vspochernin.errapi.repository.UserRepository;
 @RequiredArgsConstructor
 public class OwnerInitializer implements ApplicationRunner {
 
+    private static final String OWNER_LOGIN_ENV = "ERRLOG_OWNER_LOGIN";
+    private static final String OWNER_EMAIL_ENV = "ERRLOG_OWNER_EMAIL";
+    private static final String OWNER_PASSWORD_ENV = "ERRLOG_OWNER_PASSWORD";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(ApplicationArguments args) {
         if (userRepository.existsByRole(UserRole.OWNER)) {
-            return;
+            return; // Создаем владельца только если его еще нет.
         }
 
-        String login = getEnvOrThrow("ERRLOG_OWNER_LOGIN");
-        String email = getEnvOrThrow("ERRLOG_OWNER_EMAIL");
-        String password = getEnvOrThrow("ERRLOG_OWNER_PASSWORD");
+        String login = getEnvOrThrow(OWNER_LOGIN_ENV);
+        String email = getEnvOrThrow(OWNER_EMAIL_ENV);
+        String password = getEnvOrThrow(OWNER_PASSWORD_ENV);
 
         if (userRepository.existsByLogin(login) || userRepository.existsByEmail(email)) {
-            throw new IllegalStateException("OWNER init failed: login/email already exists in database");
+            throw new IllegalStateException("Owner init failed: login/email already exists in database");
         }
 
         User owner = new User();
@@ -40,10 +44,10 @@ public class OwnerInitializer implements ApplicationRunner {
     }
 
     private static String getEnvOrThrow(String name) {
-        String v = System.getenv(name);
-        if (v == null || v.isBlank()) {
-            throw new IllegalStateException("Missing required environment variable " + name);
+        String env = System.getenv(name);
+        if (env == null || env.isBlank()) {
+            throw new IllegalStateException("Missing required environment variable: " + name);
         }
-        return v;
+        return env;
     }
 }

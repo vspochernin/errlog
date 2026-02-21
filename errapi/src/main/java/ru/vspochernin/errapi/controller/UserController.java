@@ -13,15 +13,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.vspochernin.errapi.dto.UserDto;
+import ru.vspochernin.errapi.dto.auth.UserDto;
 import ru.vspochernin.errapi.model.UserRole;
 import ru.vspochernin.errapi.security.AuthUserDetails;
 import ru.vspochernin.errapi.service.UserService;
 
 @RestController
 @RequestMapping("/api/users")
-@PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
 public class UserController {
 
     private final UserService userService;
