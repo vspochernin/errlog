@@ -16,7 +16,7 @@ public class ClickHouseEventWriter implements ErrorEventWriter {
 
     // Максимальный размер батча для вставки в ClickHouse.
     // Если количество значений на вставку будет больше, Spring разобъет их на соответствующие батчи.
-    private static final int INSERT_BATCH_SIZE = 200;
+    private static final int INSERT_BATCH_SIZE = 1000;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -41,7 +41,7 @@ public class ClickHouseEventWriter implements ErrorEventWriter {
                 exception_message,
                 stacktrace
             )
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,xxh3(?),?,?,?,?,?,?,?,?,?)
             """;
 
     @Override
@@ -64,7 +64,7 @@ public class ClickHouseEventWriter implements ErrorEventWriter {
                     ps.setString(4, normalizedErrorEvent.service());
                     ps.setString(5, normalizedErrorEvent.level());
                     ps.setString(6, normalizedErrorEvent.messageFormatted());
-                    ps.setString(7, Long.toUnsignedString(fingerprintResult.fingerprint())); // UInt64.
+                    ps.setString(7, fingerprintResult.fingerprintBase()); // Для xxh3().
                     ps.setString(8, fingerprintResult.fingerprintSource().name());
 
                     ps.setString(9, normalizedErrorEvent.instance());

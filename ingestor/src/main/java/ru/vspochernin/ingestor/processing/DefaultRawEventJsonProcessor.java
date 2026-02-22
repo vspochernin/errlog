@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.vspochernin.ingestor.fingerprint.FingerprintCalculator;
+import ru.vspochernin.ingestor.fingerprint.FingerprintBuilder;
 import ru.vspochernin.ingestor.fingerprint.FingerprintResult;
 import ru.vspochernin.ingestor.model.ErrorEvent;
 import ru.vspochernin.ingestor.model.NormalizedErrorEvent;
@@ -22,7 +22,7 @@ public class DefaultRawEventJsonProcessor implements RawEventJsonProcessor {
 
     private final ObjectMapper objectMapper;
     private final RawEventNormalizerRegistry normalizerRegistry;
-    private final FingerprintCalculator fingerprintCalculator;
+    private final FingerprintBuilder fingerprintBuilder;
 
     @Override
     public Optional<ErrorEvent> process(String rawEventJson) {
@@ -57,7 +57,7 @@ public class DefaultRawEventJsonProcessor implements RawEventJsonProcessor {
 
         FingerprintResult fingerprintResult;
         try {
-            fingerprintResult = fingerprintCalculator.calculate(normalizedErrorEvent);
+            fingerprintResult = fingerprintBuilder.build(normalizedErrorEvent);
         } catch (Exception e) {
             log.warn("Skip normalizedErrorEvent={} because of {}", normalizedErrorEvent, e.getMessage());
             return Optional.empty();
