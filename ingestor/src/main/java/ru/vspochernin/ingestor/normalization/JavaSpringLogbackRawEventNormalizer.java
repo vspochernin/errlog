@@ -35,8 +35,14 @@ public class JavaSpringLogbackRawEventNormalizer implements RawEventNormalizer {
             return Optional.empty();
         }
 
+        long ts = dto.timestamp();
+        if (ts <= 0) {
+            log.error("Raw event timestamp is <= 0, ts={}, rawEvent={}", ts, rawEvent);
+            return Optional.empty();
+        }
+
         return Optional.of(new NormalizedErrorEvent(
-                dto.timestamp() > 0 ? Instant.ofEpochMilli(dto.timestamp()) : Instant.now(),
+                Instant.ofEpochMilli(ts),
                 sourceType(),
                 StringUtils.getOrDefault(dto.service(), "unknown-service"),
                 StringUtils.getOrDefault(dto.level(), "UNKNOWN"),
