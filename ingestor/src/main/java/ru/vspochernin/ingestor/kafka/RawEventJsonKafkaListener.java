@@ -32,7 +32,17 @@ public class RawEventJsonKafkaListener {
         }
 
         if (!events.isEmpty()) {
-            eventWriter.write(events);
+            try {
+                eventWriter.write(events);
+            } catch (Exception e) {
+                log.error(
+                        "ClickHouse insert failed, no ack (will retry), total={}, toInsert={}, skipped={}",
+                        rawEventJsons.size(),
+                        events.size(),
+                        skipCount.get(),
+                        e);
+                throw e;
+            }
         }
 
         // Если вставка упадет - ack не будет вызван и Kafka переотдаст эвенты.

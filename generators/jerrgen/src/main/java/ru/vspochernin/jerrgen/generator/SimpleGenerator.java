@@ -11,8 +11,8 @@ public class SimpleGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleGenerator.class);
 
-    private static final int SLEEP_BEFORE_GENERATE_MILLIS = 500;
-    private static final int SCHEDULED_FIXED_RATE_MILLIS = 500;
+    private static final int SLEEP_BEFORE_GENERATE_MILLIS = 100;
+    private static final int SCHEDULED_FIXED_RATE_MILLIS = 100;
 
     @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS)
     public void generateInfo() {
