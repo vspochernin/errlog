@@ -6,7 +6,7 @@ import ru.vspochernin.errapi.dto.errors.FilterFieldDto;
 
 public record FilterField(
         String name, // Имя для передачи в API.
-        String column, // Название колонки в ClickHouse
+        String column, // Название колонки в ClickHouse.
         List<FilterOp> ops,
         String description)
 {
