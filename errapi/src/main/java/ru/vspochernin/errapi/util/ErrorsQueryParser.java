@@ -29,7 +29,9 @@ public class ErrorsQueryParser {
         try {
             return Instant.parse(raw);
         } catch (Exception e) {
-            throw new ErrapiException(ErrapiErrorType.INCORRECT_TIME_BORDERS, fieldName + ": " + raw);
+            throw new ErrapiException(
+                    ErrapiErrorType.INCORRECT_TIME_BORDERS,
+                    fieldName + ": " + raw + " ожидается ISO-8601 в UTC");
         }
     }
 }
