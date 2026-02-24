@@ -4,7 +4,7 @@ import java.time.Instant;
 
 import ru.vspochernin.errapi.model.ErrorEventRow;
 
-public record ErrorsEventsListItemDto(
+public record ErrorsEventsResponseItemDto(
         String eventId,
         Instant timestamp,
         String sourceType,
@@ -21,9 +21,8 @@ public record ErrorsEventsListItemDto(
         String exceptionClass,
         String exceptionMessage)
 {
-
-    public static ErrorsEventsListItemDto fromRow(ErrorEventRow r) {
-        return new ErrorsEventsListItemDto(
+    public static ErrorsEventsResponseItemDto fromRow(ErrorEventRow r) {
+        return new ErrorsEventsResponseItemDto(
                 r.eventId(),
                 r.timestamp(),
                 r.sourceType(),
