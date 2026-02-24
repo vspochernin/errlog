@@ -2,8 +2,8 @@ package ru.vspochernin.errapi.repository;
 
 import java.util.List;
 
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -18,7 +18,7 @@ public class ErrorsRepository {
 
     private static final String TABLE = "errlog_ch.error_events";
 
-    @Qualifier("clickhouseJdbcTemplate")
+    @Resource(name = "clickhouseJdbcTemplate")
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final ErrorEventRowMapper rowMapper;
 
@@ -35,7 +35,7 @@ public class ErrorsRepository {
         return value == null ? 0L : value;
     }
 
-    public List<ErrorEventRow> findEvents(ErrorsQuery query, long limit, long offset) {
+    public List<ErrorEventRow> findEvents(ErrorsQuery query, int limit, long offset) {
         ErrorsSqlBuilder.Where where = ErrorsSqlBuilder.buildWhere(query);
 
         MapSqlParameterSource params = new MapSqlParameterSource();
@@ -52,7 +52,7 @@ public class ErrorsRepository {
                     service,
                     level,
                     message_formatted,
-                    fingerprint,
+                    toString(fingerprint) AS fingerprint,
                     fingerprint_source,
                     instance,
                     service_version,
@@ -64,7 +64,7 @@ public class ErrorsRepository {
                     CAST(NULL, 'Nullable(String)') AS stacktrace
                 FROM %s
                 WHERE %s
-                ORDER BY timestamp DESC
+                ORDER BY timestamp DESC, event_id DESC
                 LIMIT :limit OFFSET :offset
                 """.formatted(TABLE, where.sql());
 

@@ -32,7 +32,7 @@ public class ErrorsController {
     public ResponseEntity<ErrorsEventsResponse> events(
             @RequestParam(value = "from", required = false) String from,
             @RequestParam(value = "to", required = false) String to,
-            @RequestParam(value = "limit", defaultValue = "10") long limit,
+            @RequestParam(value = "limit", defaultValue = "10") int limit,
             @RequestParam(value = "offset", defaultValue = "0") long offset)
     {
         ErrorsEventsResponse response = errorsService.getEvents(from, to, limit, offset);

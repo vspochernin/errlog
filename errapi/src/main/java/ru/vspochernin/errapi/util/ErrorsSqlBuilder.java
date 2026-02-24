@@ -15,7 +15,7 @@ public class ErrorsSqlBuilder {
         params.addValue("from", Timestamp.from(query.from()));
         params.addValue("to", Timestamp.from(query.to()));
 
-        String where = "timestamp >= :from AND timestamp <= :to";
+        String where = "timestamp >= :from AND timestamp < :to";
         return new Where(where, params);
     }
 

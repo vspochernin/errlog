@@ -15,20 +15,21 @@ public class ErrorsQueryParser {
     }
 
     public static ErrorsQuery parse(String fromRaw, String toRaw) {
-        Instant to = (toRaw == null || toRaw.isBlank()) ? Instant.now() : parseInstant(toRaw);
-        Instant from = (fromRaw == null || fromRaw.isBlank()) ? to.minus(DEFAULT_WINDOW) : parseInstant(fromRaw);
+        Instant to = (toRaw == null || toRaw.isBlank()) ? Instant.now() : parseInstant(toRaw, "to");
+        Instant from =
+                (fromRaw == null || fromRaw.isBlank()) ? to.minus(DEFAULT_WINDOW) : parseInstant(fromRaw, "from");
 
         if (from.isAfter(to)) {
-            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "from must be <= to");
+            throw new ErrapiException(ErrapiErrorType.INCORRECT_TIME_BORDERS, "from должен быть <= to");
         }
         return new ErrorsQuery(from, to);
     }
 
-    private static Instant parseInstant(String raw) {
+    private static Instant parseInstant(String raw, String fieldName) {
         try {
             return Instant.parse(raw);
         } catch (Exception e) {
-            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "Invalid raw instant" + raw);
+            throw new ErrapiException(ErrapiErrorType.INCORRECT_TIME_BORDERS, fieldName + ": " + raw);
         }
     }
 }

@@ -27,7 +27,7 @@ public class ErrorsService {
                 .toList());
     }
 
-    public ErrorsEventsResponse getEvents(String from, String to, long limit, long offset) {
+    public ErrorsEventsResponse getEvents(String from, String to, int limit, long offset) {
         validateLimitOffset(limit, offset);
 
         ErrorsQuery query = ErrorsQueryParser.parse(from, to);
@@ -40,7 +40,7 @@ public class ErrorsService {
         return new ErrorsEventsResponse(items, total);
     }
 
-    private static void validateLimitOffset(long limit, long offset) {
+    private static void validateLimitOffset(int limit, long offset) {
         if (limit < 1 || limit > 500) {
             throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "Limit должен быть от 1 до 500");
         }
