@@ -2,8 +2,7 @@ package ru.vspochernin.errapi.repository;
 
 import java.util.List;
 
-import jakarta.annotation.Resource;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -13,14 +12,21 @@ import ru.vspochernin.errapi.model.errors.ErrorsQuery;
 import ru.vspochernin.errapi.util.ErrorsSqlBuilder;
 
 @Repository
-@RequiredArgsConstructor
 public class ErrorsRepository {
 
     private static final String TABLE = "errlog_ch.error_events";
 
-    @Resource(name = "clickhouseJdbcTemplate")
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final ErrorEventRowMapper rowMapper;
+
+    public ErrorsRepository(
+            @Qualifier("clickhouseJdbcTemplate")
+            NamedParameterJdbcTemplate jdbcTemplate,
+            ErrorEventRowMapper rowMapper)
+    {
+        this.jdbcTemplate = jdbcTemplate;
+        this.rowMapper = rowMapper;
+    }
 
     public long countEvents(ErrorsQuery query) {
         ErrorsSqlBuilder.Where where = ErrorsSqlBuilder.buildWhere(query);
