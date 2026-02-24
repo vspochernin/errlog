@@ -5,8 +5,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import ru.vspochernin.errapi.model.User;
-import ru.vspochernin.errapi.model.UserRole;
+import ru.vspochernin.errapi.model.auth.User;
+import ru.vspochernin.errapi.model.auth.UserRole;
 import ru.vspochernin.errapi.repository.UserRepository;
 
 @Component

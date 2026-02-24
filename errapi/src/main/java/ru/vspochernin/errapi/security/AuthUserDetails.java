@@ -7,8 +7,8 @@ import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import ru.vspochernin.errapi.model.User;
-import ru.vspochernin.errapi.model.UserRole;
+import ru.vspochernin.errapi.model.auth.User;
+import ru.vspochernin.errapi.model.auth.UserRole;
 
 
 public class AuthUserDetails implements UserDetails {

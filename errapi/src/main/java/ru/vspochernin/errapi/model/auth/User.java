@@ -1,4 +1,4 @@
-package ru.vspochernin.errapi.model;
+package ru.vspochernin.errapi.model.auth;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

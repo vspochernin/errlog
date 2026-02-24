@@ -1,7 +1,7 @@
 package ru.vspochernin.errapi.dto.auth;
 
-import ru.vspochernin.errapi.model.User;
-import ru.vspochernin.errapi.model.UserRole;
+import ru.vspochernin.errapi.model.auth.User;
+import ru.vspochernin.errapi.model.auth.UserRole;
 
 public record UserDto(
         long id,

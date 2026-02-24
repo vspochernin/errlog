@@ -5,7 +5,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import ru.vspochernin.errapi.model.User;
+import ru.vspochernin.errapi.model.auth.User;
 import ru.vspochernin.errapi.repository.UserRepository;
 
 @Service

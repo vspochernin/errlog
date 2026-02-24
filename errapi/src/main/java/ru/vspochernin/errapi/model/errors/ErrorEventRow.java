@@ -1,4 +1,4 @@
-package ru.vspochernin.errapi.model;
+package ru.vspochernin.errapi.model.errors;
 
 import java.time.Instant;
 

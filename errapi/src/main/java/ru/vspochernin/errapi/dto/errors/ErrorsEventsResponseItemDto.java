@@ -2,7 +2,7 @@ package ru.vspochernin.errapi.dto.errors;
 
 import java.time.Instant;
 
-import ru.vspochernin.errapi.model.ErrorEventRow;
+import ru.vspochernin.errapi.model.errors.ErrorEventRow;
 
 public record ErrorsEventsResponseItemDto(
         String eventId,
