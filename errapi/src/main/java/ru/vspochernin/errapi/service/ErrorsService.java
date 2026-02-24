@@ -19,6 +19,9 @@ import ru.vspochernin.errapi.util.ErrorsQueryParser;
 @RequiredArgsConstructor
 public class ErrorsService {
 
+    private static final int LIMIT_MIN = 1;
+    private static final int LIMIT_MAX = 500;
+
     private final ErrorsRepository errorsRepository;
 
     public ErrorsFiltersResponse getFilters() {
@@ -32,19 +35,20 @@ public class ErrorsService {
 
         ErrorsQuery query = ErrorsQueryParser.parse(from, to);
 
-        long total = errorsRepository.countEvents(query);
+        long eventsTotal = errorsRepository.countEvents(query);
         List<ErrorsEventsResponseItemDto> items = errorsRepository.findEvents(query, limit, offset).stream()
                 .map(ErrorsEventsResponseItemDto::fromRow)
                 .toList();
 
-        return new ErrorsEventsResponse(items, total);
+        return new ErrorsEventsResponse(items, eventsTotal);
     }
 
     private static void validateLimitOffset(int limit, long offset) {
-        if (limit < 1 || limit > 500) {
-            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "Limit должен быть от 1 до 500");
+        if (limit < LIMIT_MIN || limit > LIMIT_MAX) {
+            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST,
+                    "Limit должен быть от " + LIMIT_MIN + " до " + LIMIT_MAX);
         }
-        if (offset < 0) {
+        if (offset < 0L) {
             throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "Offset должен быть неотрицательным");
         }
     }
