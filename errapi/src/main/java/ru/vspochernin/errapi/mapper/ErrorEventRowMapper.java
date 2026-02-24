@@ -16,7 +16,7 @@ public class ErrorEventRowMapper implements RowMapper<ErrorEventRow> {
         Timestamp timestamp = rs.getTimestamp("timestamp");
         return new ErrorEventRow(
                 rs.getString("event_id"),
-                timestamp == null ? null : timestamp.toInstant(),
+                timestamp != null ? timestamp.toInstant() : null,
                 rs.getString("source_type"),
                 rs.getString("service"),
                 rs.getString("level"),
