@@ -22,10 +22,7 @@ CREATE TABLE IF NOT EXISTS errlog_ch.error_events
     message_template   Nullable(String),
     exception_class    Nullable(String),
     exception_message  Nullable(String),
-    stacktrace         Nullable(String),
-
-    -- Дефолтные поля.
-    ingested_at        DateTime64(3, 'UTC') DEFAULT now64(3)
+    stacktrace         Nullable(String)
 )
     ENGINE = MergeTree
         PARTITION BY toYYYYMM(timestamp)
