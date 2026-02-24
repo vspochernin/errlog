@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.vspochernin.errapi.dto.auth.UserDto;
-import ru.vspochernin.errapi.model.UserRole;
+import ru.vspochernin.errapi.model.auth.UserRole;
 import ru.vspochernin.errapi.security.AuthUserDetails;
 import ru.vspochernin.errapi.service.UserService;
 
@@ -27,7 +27,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    ResponseEntity<List<UserDto>> listUsers() {
+    public ResponseEntity<List<UserDto>> listUsers() {
         List<UserDto> response = userService.listUsers();
         return ResponseEntity
                 .status(HttpStatus.OK)

@@ -1,4 +1,4 @@
-package ru.vspochernin.errapi.model;
+package ru.vspochernin.errapi.model.auth;
 
 import lombok.RequiredArgsConstructor;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;

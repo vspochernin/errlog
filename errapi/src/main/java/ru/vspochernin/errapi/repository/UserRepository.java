@@ -3,8 +3,8 @@ package ru.vspochernin.errapi.repository;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import ru.vspochernin.errapi.model.User;
-import ru.vspochernin.errapi.model.UserRole;
+import ru.vspochernin.errapi.model.auth.User;
+import ru.vspochernin.errapi.model.auth.UserRole;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 

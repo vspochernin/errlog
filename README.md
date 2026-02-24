@@ -103,7 +103,31 @@ curl -X POST "http://localhost:8080/api/auth/login" \
   -d '{"login":"owner","password":"owner_password"}'
 ```
 
-- Дальше токен можно вставить в Swagger через кнопку **Authorize** или использовать в curl:
+- Дальше токен можно вставить в Swagger через кнопку **Authorize** или использовать в curl.
+
+- Чтобы не копировать токен каждый раз, можно сохранить его в переменную окружения:
 ```bash
-curl -H "Authorization: Bearer <token>" http://localhost:8080/api/users
+export ERRLOG_OWNER_JWT="<token>"
+```
+
+- Пример запроса:
+```bash
+curl -H "Authorization: Bearer $ERRLOG_OWNER_JWT" http://localhost:8080/api/users
+```
+
+- Проверить Errors API (шаг 1):
+
+- Allowlist фильтров:
+```bash
+curl -sS -H "Authorization: Bearer $ERRLOG_OWNER_JWT" "http://localhost:8080/api/errors/filters"
+```
+
+- Список событий (по умолчанию последние 24 часа; без `stacktrace`):
+```bash
+curl -sS -H "Authorization: Bearer $ERRLOG_OWNER_JWT" "http://localhost:8080/api/errors/events"
+```
+
+- С явными границами времени:
+```bash
+curl -sS -H "Authorization: Bearer $ERRLOG_OWNER_JWT" "http://localhost:8080/api/errors/events?from=2026-02-24T00:00:00Z&to=2026-02-25T00:00:00Z&limit=20&offset=0"
 ```
