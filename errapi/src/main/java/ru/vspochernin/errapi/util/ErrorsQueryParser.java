@@ -9,7 +9,7 @@ import ru.vspochernin.errapi.model.errors.ErrorsQuery;
 
 public class ErrorsQueryParser {
 
-    private static final Duration DEFAULT_WINDOW = Duration.ofHours(24);
+    private static final Duration DEFAULT_TIME_WINDOW = Duration.ofHours(24);
 
     private ErrorsQueryParser() {
     }
@@ -17,7 +17,7 @@ public class ErrorsQueryParser {
     public static ErrorsQuery parse(String fromRaw, String toRaw) {
         Instant to = (toRaw == null || toRaw.isBlank()) ? Instant.now() : parseInstant(toRaw, "to");
         Instant from =
-                (fromRaw == null || fromRaw.isBlank()) ? to.minus(DEFAULT_WINDOW) : parseInstant(fromRaw, "from");
+                (fromRaw == null || fromRaw.isBlank()) ? to.minus(DEFAULT_TIME_WINDOW) : parseInstant(fromRaw, "from");
 
         if (from.isAfter(to)) {
             throw new ErrapiException(ErrapiErrorType.INCORRECT_TIME_BORDERS, "from должен быть <= to");
