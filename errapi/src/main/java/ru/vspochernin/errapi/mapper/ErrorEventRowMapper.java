@@ -1,12 +1,14 @@
-package ru.vspochernin.errapi.repository;
+package ru.vspochernin.errapi.mapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Component;
 import ru.vspochernin.errapi.model.errors.ErrorEventRow;
 
+@Component
 public class ErrorEventRowMapper implements RowMapper<ErrorEventRow> {
 
     @Override
