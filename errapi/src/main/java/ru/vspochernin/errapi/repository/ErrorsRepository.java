@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import ru.vspochernin.errapi.mapper.ErrorEventRowMapper;
 import ru.vspochernin.errapi.model.errors.ErrorEventRow;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
-import ru.vspochernin.errapi.util.ErrorsSqlBuilder;
+import ru.vspochernin.errapi.util.ErrorsWhereBuilder;
 
 @Repository
 public class ErrorsRepository {
@@ -29,7 +29,7 @@ public class ErrorsRepository {
     }
 
     public long countEvents(ErrorsQuery query) {
-        ErrorsSqlBuilder.Where where = ErrorsSqlBuilder.buildWhere(query);
+        ErrorsWhereBuilder.Where where = ErrorsWhereBuilder.buildWhere(query);
 
         String sql = """
                 SELECT count()
@@ -42,7 +42,7 @@ public class ErrorsRepository {
     }
 
     public List<ErrorEventRow> findEvents(ErrorsQuery query, int limit, long offset) {
-        ErrorsSqlBuilder.Where where = ErrorsSqlBuilder.buildWhere(query);
+        ErrorsWhereBuilder.Where where = ErrorsWhereBuilder.buildWhere(query);
 
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValues(where.params().getValues());

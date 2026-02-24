@@ -5,9 +5,9 @@ import java.sql.Timestamp;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
 
-public class ErrorsSqlBuilder {
+public class ErrorsWhereBuilder {
 
-    private ErrorsSqlBuilder() {
+    private ErrorsWhereBuilder() {
     }
 
     public static Where buildWhere(ErrorsQuery query) {
