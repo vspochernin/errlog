@@ -1,6 +1,9 @@
 package ru.vspochernin.errapi.config;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import ru.vspochernin.errapi.model.errors.FilterField;
 import ru.vspochernin.errapi.model.errors.FilterOp;
@@ -75,4 +78,7 @@ public class ErrorsAllowlist {
                     "exception_message",
                     List.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
                     "Сообщение исключения"));
+
+    public static final Map<String, FilterField> BY_NAME = FIELDS.stream()
+            .collect(Collectors.toMap(FilterField::name, Function.identity()));
 }
