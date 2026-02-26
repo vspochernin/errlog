@@ -29,5 +29,5 @@ public enum FilterOp {
     }
 
     private static final Map<String, FilterOp> BY_NAME = Arrays.stream(FilterOp.values())
-            .collect(Collectors.toUnmodifiableMap(FilterOp::getName, Function.identity()));
+            .collect(Collectors.toMap(FilterOp::getName, Function.identity()));
 }

@@ -90,5 +90,5 @@ public class ErrorsAllowlist {
     }
 
     private static final Map<String, FilterField> BY_NAME = FIELDS.stream()
-            .collect(Collectors.toUnmodifiableMap(FilterField::name, Function.identity()));
+            .collect(Collectors.toMap(FilterField::name, Function.identity()));
 }
