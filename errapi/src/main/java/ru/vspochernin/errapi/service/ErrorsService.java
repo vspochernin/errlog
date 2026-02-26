@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import ru.vspochernin.errapi.config.ErrorsAllowlist;
 import ru.vspochernin.errapi.dto.errors.ErrorsEventsRequest;
 import ru.vspochernin.errapi.dto.errors.ErrorsEventsResponse;
-import ru.vspochernin.errapi.dto.errors.ErrorsEventsResponseItemDto;
 import ru.vspochernin.errapi.dto.errors.ErrorsFiltersResponse;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
@@ -47,8 +46,8 @@ public class ErrorsService {
         ErrorsQuery query = new ErrorsQuery(timeWindow, fingerprintO, filters);
 
         long eventsTotal = errorsRepository.countEvents(query);
-        List<ErrorsEventsResponseItemDto> items = errorsRepository.findEvents(query, limit, offset).stream()
-                .map(ErrorsEventsResponseItemDto::fromRow)
+        List<ErrorsEventsResponse.Item> items = errorsRepository.findEvents(query, limit, offset).stream()
+                .map(ErrorsEventsResponse.Item::fromRow)
                 .toList();
 
         return new ErrorsEventsResponse(items, eventsTotal);
