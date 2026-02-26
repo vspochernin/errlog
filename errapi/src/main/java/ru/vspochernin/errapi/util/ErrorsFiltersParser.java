@@ -23,33 +23,35 @@ public class ErrorsFiltersParser {
 
         List<ErrorsFilterCondition> result = new ArrayList<>(rawFilters.size());
 
-        for (ErrorsFilterRequest rawFilter : rawFilters) {
+        for (int i = 0; i < rawFilters.size(); i++) {
+            ErrorsFilterRequest rawFilter = rawFilters.get(i);
             if (rawFilter == null) {
-                throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filter is null");
+                throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filters[" + i + "] is null");
             }
 
             String fieldName = rawFilter.field();
             if (fieldName == null || fieldName.isBlank()) {
-                throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filter.field is null or blank");
+                throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filters[" + i + "].field is blank");
             }
-
             FilterField field = ErrorsAllowlist.byName(fieldName);
-            FilterOp operation = parseOperation(rawFilter.operation());
 
+            FilterOp operation = parseOperation(rawFilter.operation(), i);
             if (!field.operations().contains(operation)) {
                 throw new ErrapiException(
                         ErrapiErrorType.BAD_REQUEST,
-                        "operation " + operation.getName() + " unsupported for field " + field.name());
+                        "filters[" + i + "].operation " + operation.getName() + " unsupported for field " +
+                                field.name());
             }
 
             List<String> values = rawFilter.values();
             if (values == null || values.isEmpty()) {
-                throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filters.values is null or empty");
+                throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filters[" + i + "].values is empty");
             }
             if (operation != FilterOp.IN && values.size() != 1) {
                 throw new ErrapiException(
                         ErrapiErrorType.BAD_REQUEST,
-                        "filters.values must contains only one element for operation " + operation.getName());
+                        "filters[" + i + "].values must contain exactly one element for operation " +
+                                operation.getName());
             }
 
             result.add(new ErrorsFilterCondition(field, operation, List.copyOf(values)));
@@ -58,9 +60,9 @@ public class ErrorsFiltersParser {
         return result;
     }
 
-    private static FilterOp parseOperation(String raw) {
+    private static FilterOp parseOperation(String raw, int i) {
         if (raw == null || raw.isBlank()) {
-            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "empty or null operation");
+            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filters[" + i + "].operation is null or blank");
         }
         return FilterOp.byName(raw);
     }
