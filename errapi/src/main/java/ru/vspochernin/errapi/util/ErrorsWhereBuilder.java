@@ -15,10 +15,10 @@ public class ErrorsWhereBuilder {
 
     public static Where buildWhere(ErrorsQuery query) {
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("from", Timestamp.from(query.from()));
-        params.addValue("to", Timestamp.from(query.to()));
 
         StringBuilder where = new StringBuilder("timestamp >= :from AND timestamp < :to");
+        params.addValue("from", Timestamp.from(query.timeWindow().from()));
+        params.addValue("to", Timestamp.from(query.timeWindow().to()));
 
         query.fingerprintO().ifPresent(fingerprint -> {
             where.append(" AND fingerprint = toUInt64(:fingerprint)");

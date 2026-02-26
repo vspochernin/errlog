@@ -1,7 +1,6 @@
 package ru.vspochernin.errapi.service;
 
 import java.math.BigInteger;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,10 +15,11 @@ import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
 import ru.vspochernin.errapi.model.errors.ErrorsFilterCondition;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
+import ru.vspochernin.errapi.model.errors.ErrorsTimeWindow;
 import ru.vspochernin.errapi.model.errors.FilterField;
 import ru.vspochernin.errapi.repository.ErrorsRepository;
 import ru.vspochernin.errapi.util.ErrorsFiltersParser;
-import ru.vspochernin.errapi.util.ErrorsQueryParser;
+import ru.vspochernin.errapi.util.ErrorsTimeWindowParser;
 import ru.vspochernin.errapi.util.FingerprintParser;
 
 @Service
@@ -40,16 +40,11 @@ public class ErrorsService {
     public ErrorsEventsResponse getEvents(ErrorsEventsRequest request, int limit, long offset) {
         validateLimitOffset(limit, offset);
 
-        Instant to = request.to();
-        Instant from = request.from();
-        ErrorsQuery base = ErrorsQueryParser.parse(
-                from == null ? null : from.toString(),
-                to == null ? null : to.toString());
-
+        ErrorsTimeWindow timeWindow = ErrorsTimeWindowParser.parse(request.from(), request.to());
         Optional<BigInteger> fingerprintO = FingerprintParser.parseOptional(request.fingerprint());
         List<ErrorsFilterCondition> filters = ErrorsFiltersParser.parse(request.filters());
 
-        ErrorsQuery query = new ErrorsQuery(base.from(), base.to(), fingerprintO, filters);
+        ErrorsQuery query = new ErrorsQuery(timeWindow, fingerprintO, filters);
 
         long eventsTotal = errorsRepository.countEvents(query);
         List<ErrorsEventsResponseItemDto> items = errorsRepository.findEvents(query, limit, offset).stream()
