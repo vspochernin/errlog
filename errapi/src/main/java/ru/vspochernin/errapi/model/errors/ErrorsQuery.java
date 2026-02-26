@@ -8,7 +8,7 @@ import java.util.Optional;
 public record ErrorsQuery(
         Instant from,
         Instant to,
-        Optional<BigInteger> fingerprint,
+        Optional<BigInteger> fingerprintO,
         List<ErrorsFilterCondition> filters)
 {
 }
