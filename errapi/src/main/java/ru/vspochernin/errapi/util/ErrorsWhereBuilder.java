@@ -5,7 +5,7 @@ import java.sql.Timestamp;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
-import ru.vspochernin.errapi.model.errors.ErrorsFilterCondition;
+import ru.vspochernin.errapi.model.errors.ErrorsFilter;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
 
 public class ErrorsWhereBuilder {
@@ -26,7 +26,7 @@ public class ErrorsWhereBuilder {
         });
 
         int n = 0;
-        for (ErrorsFilterCondition filter : query.filters()) {
+        for (ErrorsFilter filter : query.filters()) {
             String column = filter.field().column();
             String paramBase = "filter_" + n;
 

@@ -12,12 +12,12 @@ import ru.vspochernin.errapi.dto.errors.ErrorsEventsResponse;
 import ru.vspochernin.errapi.dto.errors.ErrorsFiltersResponse;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
-import ru.vspochernin.errapi.model.errors.ErrorsFilterCondition;
+import ru.vspochernin.errapi.model.errors.ErrorsFilter;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
-import ru.vspochernin.errapi.model.errors.ErrorsTimeWindow;
+import ru.vspochernin.errapi.model.errors.TimeWindow;
 import ru.vspochernin.errapi.repository.ErrorsRepository;
 import ru.vspochernin.errapi.util.ErrorsFiltersParser;
-import ru.vspochernin.errapi.util.ErrorsTimeWindowParser;
+import ru.vspochernin.errapi.util.TimeWindowParser;
 import ru.vspochernin.errapi.util.FingerprintParser;
 
 @Service
@@ -31,16 +31,16 @@ public class ErrorsService {
 
     public ErrorsFiltersResponse getFilters() {
         return new ErrorsFiltersResponse(ErrorsAllowlist.FIELDS.stream()
-                .map(ErrorsFiltersResponse.Item::fromFilter)
+                .map(ErrorsFiltersResponse.Item::fromFilterField)
                 .toList());
     }
 
     public ErrorsEventsResponse getEvents(ErrorsRequest request, int limit, long offset) {
         validateLimitOffset(limit, offset);
 
-        ErrorsTimeWindow timeWindow = ErrorsTimeWindowParser.parse(request.from(), request.to());
+        TimeWindow timeWindow = TimeWindowParser.parse(request.from(), request.to());
         Optional<BigInteger> fingerprintO = FingerprintParser.parseOptional(request.fingerprint());
-        List<ErrorsFilterCondition> filters = ErrorsFiltersParser.parse(request.filters());
+        List<ErrorsFilter> filters = ErrorsFiltersParser.parse(request.filters());
 
         ErrorsQuery query = new ErrorsQuery(timeWindow, fingerprintO, filters);
 

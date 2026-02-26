@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
 import ru.vspochernin.errapi.model.errors.FilterField;
-import ru.vspochernin.errapi.model.errors.FilterOp;
+import ru.vspochernin.errapi.model.errors.FilterOperation;
 
 public class ErrorsAllowlist {
 
@@ -21,67 +21,67 @@ public class ErrorsAllowlist {
             new FilterField(
                     "sourceType",
                     "source_type",
-                    Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
+                    Set.of(FilterOperation.EQ, FilterOperation.NE, FilterOperation.IN, FilterOperation.LIKE),
                     "Тип источника события"),
 
             new FilterField(
                     "service",
                     "service",
-                    Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
+                    Set.of(FilterOperation.EQ, FilterOperation.NE, FilterOperation.IN, FilterOperation.LIKE),
                     "Название сервиса"),
 
             new FilterField(
                     "level",
                     "level",
-                    Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN),
+                    Set.of(FilterOperation.EQ, FilterOperation.NE, FilterOperation.IN),
                     "Уровень логирования"),
 
             new FilterField(
                     "messageFormatted",
                     "message_formatted",
-                    Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
+                    Set.of(FilterOperation.EQ, FilterOperation.NE, FilterOperation.IN, FilterOperation.LIKE),
                     "Отформатированное сообщение (со вставленным текстом)"),
 
             new FilterField(
                     "instance",
                     "instance",
-                    Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
+                    Set.of(FilterOperation.EQ, FilterOperation.NE, FilterOperation.IN, FilterOperation.LIKE),
                     "Название инстанса сервиса"),
 
             new FilterField(
                     "serviceVersion",
                     "service_version",
-                    Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
+                    Set.of(FilterOperation.EQ, FilterOperation.NE, FilterOperation.IN, FilterOperation.LIKE),
                     "Версия сервиса"),
 
             new FilterField(
                     "logger",
                     "logger",
-                    Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
+                    Set.of(FilterOperation.EQ, FilterOperation.NE, FilterOperation.IN, FilterOperation.LIKE),
                     "Название логгера"),
 
             new FilterField(
                     "thread",
                     "thread",
-                    Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
+                    Set.of(FilterOperation.EQ, FilterOperation.NE, FilterOperation.IN, FilterOperation.LIKE),
                     "Название потока"),
 
             new FilterField(
                     "messageTemplate",
                     "message_template",
-                    Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
+                    Set.of(FilterOperation.EQ, FilterOperation.NE, FilterOperation.IN, FilterOperation.LIKE),
                     "Шаблон сообщения (без вставленного текста)"),
 
             new FilterField(
                     "exceptionClass",
                     "exception_class",
-                    Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
+                    Set.of(FilterOperation.EQ, FilterOperation.NE, FilterOperation.IN, FilterOperation.LIKE),
                     "Класс исключения"),
 
             new FilterField(
                     "exceptionMessage",
                     "exception_message",
-                    Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
+                    Set.of(FilterOperation.EQ, FilterOperation.NE, FilterOperation.IN, FilterOperation.LIKE),
                     "Сообщение исключения"));
 
     public static FilterField byName(String name) {

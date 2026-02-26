@@ -2,9 +2,9 @@ package ru.vspochernin.errapi.model.errors;
 
 import java.util.List;
 
-public record ErrorsFilterCondition(
+public record ErrorsFilter(
         FilterField field,
-        FilterOp operation,
+        FilterOperation operation,
         List<String> values)
 {
 }

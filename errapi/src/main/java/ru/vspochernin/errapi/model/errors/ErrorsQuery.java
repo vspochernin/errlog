@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 public record ErrorsQuery(
-        ErrorsTimeWindow timeWindow,
+        TimeWindow timeWindow,
         Optional<BigInteger> fingerprintO,
-        List<ErrorsFilterCondition> filters)
+        List<ErrorsFilter> filters)
 {
 }

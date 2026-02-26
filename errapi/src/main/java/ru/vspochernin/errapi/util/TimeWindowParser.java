@@ -5,16 +5,16 @@ import java.time.Instant;
 
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
-import ru.vspochernin.errapi.model.errors.ErrorsTimeWindow;
+import ru.vspochernin.errapi.model.errors.TimeWindow;
 
-public class ErrorsTimeWindowParser {
+public class TimeWindowParser {
 
     private static final Duration DEFAULT_TIME_WINDOW = Duration.ofHours(24);
 
-    private ErrorsTimeWindowParser() {
+    private TimeWindowParser() {
     }
 
-    public static ErrorsTimeWindow parse(Instant from, Instant to) {
+    public static TimeWindow parse(Instant from, Instant to) {
         Instant resolvedTo = (to == null) ? Instant.now() : to;
         Instant resolvedFrom = (from == null) ? resolvedTo.minus(DEFAULT_TIME_WINDOW) : from;
 
@@ -22,10 +22,10 @@ public class ErrorsTimeWindowParser {
             throw new ErrapiException(ErrapiErrorType.INCORRECT_TIME_BORDERS, "from must be <= to");
         }
 
-        return new ErrorsTimeWindow(resolvedFrom, resolvedTo);
+        return new TimeWindow(resolvedFrom, resolvedTo);
     }
 
-    public static ErrorsTimeWindow parse(String fromRaw, String toRaw) {
+    public static TimeWindow parse(String fromRaw, String toRaw) {
         Instant to = (toRaw == null || toRaw.isBlank()) ? null : parseInstant(toRaw, "to");
         Instant from = (fromRaw == null || fromRaw.isBlank()) ? null : parseInstant(fromRaw, "from");
         return parse(from, to);

@@ -13,7 +13,7 @@ import ru.vspochernin.errapi.exception.ErrapiException;
 
 @Getter
 @RequiredArgsConstructor
-public enum FilterOp {
+public enum FilterOperation {
 
     EQ("eq"),
     NE("ne"),
@@ -21,13 +21,13 @@ public enum FilterOp {
     LIKE("like"),
     ;
 
-    private final String name; // Имя для передачи в API.
+    private final String name; // Имя операции для передачи в API.
 
-    public static FilterOp byName(String name) {
+    public static FilterOperation byName(String name) {
         return Optional.ofNullable(BY_NAME.get(name))
                 .orElseThrow(() -> new ErrapiException(ErrapiErrorType.BAD_REQUEST, "Unknown operation: " + name));
     }
 
-    private static final Map<String, FilterOp> BY_NAME = Arrays.stream(FilterOp.values())
-            .collect(Collectors.toMap(FilterOp::getName, Function.identity()));
+    private static final Map<String, FilterOperation> BY_NAME = Arrays.stream(FilterOperation.values())
+            .collect(Collectors.toMap(FilterOperation::getName, Function.identity()));
 }
