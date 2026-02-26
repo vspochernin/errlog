@@ -7,7 +7,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.vspochernin.errapi.config.ErrorsAllowlist;
-import ru.vspochernin.errapi.dto.errors.ErrorsEventsRequest;
+import ru.vspochernin.errapi.dto.errors.ErrorsRequest;
 import ru.vspochernin.errapi.dto.errors.ErrorsEventsResponse;
 import ru.vspochernin.errapi.dto.errors.ErrorsFiltersResponse;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
@@ -36,7 +36,7 @@ public class ErrorsService {
                 .toList());
     }
 
-    public ErrorsEventsResponse getEvents(ErrorsEventsRequest request, int limit, long offset) {
+    public ErrorsEventsResponse getEvents(ErrorsRequest request, int limit, long offset) {
         validateLimitOffset(limit, offset);
 
         ErrorsTimeWindow timeWindow = ErrorsTimeWindowParser.parse(request.from(), request.to());

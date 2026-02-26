@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ru.vspochernin.errapi.config.ErrorsAllowlist;
-import ru.vspochernin.errapi.dto.errors.ErrorsFilterRequest;
+import ru.vspochernin.errapi.dto.errors.ErrorsRequest;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
 import ru.vspochernin.errapi.model.errors.ErrorsFilterCondition;
@@ -16,7 +16,7 @@ public class ErrorsFiltersParser {
     private ErrorsFiltersParser() {
     }
 
-    public static List<ErrorsFilterCondition> parse(List<ErrorsFilterRequest> rawFilters) {
+    public static List<ErrorsFilterCondition> parse(List<ErrorsRequest.Filter> rawFilters) {
         if (rawFilters == null || rawFilters.isEmpty()) {
             return List.of();
         }
@@ -24,7 +24,7 @@ public class ErrorsFiltersParser {
         List<ErrorsFilterCondition> result = new ArrayList<>(rawFilters.size());
 
         for (int i = 0; i < rawFilters.size(); i++) {
-            ErrorsFilterRequest rawFilter = rawFilters.get(i);
+            ErrorsRequest.Filter rawFilter = rawFilters.get(i);
             if (rawFilter == null) {
                 throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filters[" + i + "] is null");
             }
