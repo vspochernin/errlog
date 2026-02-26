@@ -1,8 +1,6 @@
 package ru.vspochernin.errapi.service;
 
-import java.math.BigInteger;
 import java.util.List;
-import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,13 +10,8 @@ import ru.vspochernin.errapi.dto.errors.ErrorsEventsResponse;
 import ru.vspochernin.errapi.dto.errors.ErrorsFiltersResponse;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
-import ru.vspochernin.errapi.model.errors.ErrorsFilter;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
-import ru.vspochernin.errapi.model.errors.TimeWindow;
 import ru.vspochernin.errapi.repository.ErrorsRepository;
-import ru.vspochernin.errapi.util.ErrorsFiltersParser;
-import ru.vspochernin.errapi.util.TimeWindowParser;
-import ru.vspochernin.errapi.util.FingerprintParser;
 
 @Service
 @RequiredArgsConstructor
@@ -38,11 +31,7 @@ public class ErrorsService {
     public ErrorsEventsResponse getEvents(ErrorsRequest request, int limit, long offset) {
         validateLimitOffset(limit, offset);
 
-        TimeWindow timeWindow = TimeWindowParser.parse(request.from(), request.to());
-        Optional<BigInteger> fingerprintO = FingerprintParser.parseOptional(request.fingerprint());
-        List<ErrorsFilter> filters = ErrorsFiltersParser.parse(request.filters());
-
-        ErrorsQuery query = new ErrorsQuery(timeWindow, fingerprintO, filters);
+        ErrorsQuery query = ErrorsQuery.parseFromErrorsRequest(request);
 
         long eventsTotal = errorsRepository.countEvents(query);
         List<ErrorsEventsResponse.Item> items = errorsRepository.findEvents(query, limit, offset).stream()

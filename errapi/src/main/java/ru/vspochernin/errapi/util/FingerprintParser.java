@@ -14,7 +14,7 @@ public class FingerprintParser {
     private FingerprintParser() {
     }
 
-    public static Optional<BigInteger> parseOptional(String raw) {
+    public static Optional<BigInteger> parseO(String raw) {
         if (raw == null || raw.isBlank()) {
             return Optional.empty();
         }
