@@ -15,7 +15,6 @@ import ru.vspochernin.errapi.exception.ErrapiException;
 import ru.vspochernin.errapi.model.errors.ErrorsFilterCondition;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
 import ru.vspochernin.errapi.model.errors.ErrorsTimeWindow;
-import ru.vspochernin.errapi.model.errors.FilterField;
 import ru.vspochernin.errapi.repository.ErrorsRepository;
 import ru.vspochernin.errapi.util.ErrorsFiltersParser;
 import ru.vspochernin.errapi.util.ErrorsTimeWindowParser;
@@ -32,7 +31,7 @@ public class ErrorsService {
 
     public ErrorsFiltersResponse getFilters() {
         return new ErrorsFiltersResponse(ErrorsAllowlist.FIELDS.stream()
-                .map(FilterField::toDto)
+                .map(ErrorsFiltersResponse.Item::fromFilter)
                 .toList());
     }
 
