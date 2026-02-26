@@ -1,19 +1,26 @@
 package ru.vspochernin.errapi.service;
 
+import java.math.BigInteger;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.vspochernin.errapi.config.ErrorsAllowlist;
+import ru.vspochernin.errapi.dto.errors.ErrorsEventsRequest;
 import ru.vspochernin.errapi.dto.errors.ErrorsEventsResponse;
 import ru.vspochernin.errapi.dto.errors.ErrorsEventsResponseItemDto;
 import ru.vspochernin.errapi.dto.errors.ErrorsFiltersResponse;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
+import ru.vspochernin.errapi.model.errors.ErrorsFilterCondition;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
 import ru.vspochernin.errapi.model.errors.FilterField;
 import ru.vspochernin.errapi.repository.ErrorsRepository;
+import ru.vspochernin.errapi.util.ErrorsFiltersParser;
 import ru.vspochernin.errapi.util.ErrorsQueryParser;
+import ru.vspochernin.errapi.util.UInt64Parser;
 
 @Service
 @RequiredArgsConstructor
@@ -30,10 +37,19 @@ public class ErrorsService {
                 .toList());
     }
 
-    public ErrorsEventsResponse getEvents(String from, String to, int limit, long offset) {
+    public ErrorsEventsResponse getEvents(ErrorsEventsRequest request, int limit, long offset) {
         validateLimitOffset(limit, offset);
 
-        ErrorsQuery query = ErrorsQueryParser.parse(from, to);
+        Instant to = request.to();
+        Instant from = request.from();
+        ErrorsQuery base = ErrorsQueryParser.parse(
+                from == null ? null : from.toString(),
+                to == null ? null : to.toString());
+
+        Optional<BigInteger> fingerprintO = UInt64Parser.parseOptional(request.fingerprint(), "fingerprint");
+        List<ErrorsFilterCondition> filters = ErrorsFiltersParser.parse(request.filters());
+
+        ErrorsQuery query = new ErrorsQuery(base.from(), base.to(), fingerprintO, filters);
 
         long eventsTotal = errorsRepository.countEvents(query);
         List<ErrorsEventsResponseItemDto> items = errorsRepository.findEvents(query, limit, offset).stream()

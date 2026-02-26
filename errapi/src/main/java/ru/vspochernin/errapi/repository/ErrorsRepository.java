@@ -58,7 +58,7 @@ public class ErrorsRepository {
                     service,
                     level,
                     message_formatted,
-                    toString(fingerprint) AS fingerprint,
+                    toString(fingerprint) AS fingerprint_str,
                     fingerprint_source,
                     instance,
                     service_version,

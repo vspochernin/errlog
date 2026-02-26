@@ -2,6 +2,8 @@ package ru.vspochernin.errapi.util;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
@@ -22,7 +24,7 @@ public class ErrorsQueryParser {
         if (from.isAfter(to)) {
             throw new ErrapiException(ErrapiErrorType.INCORRECT_TIME_BORDERS, "from должен быть <= to");
         }
-        return new ErrorsQuery(from, to);
+        return new ErrorsQuery(from, to, Optional.empty(), List.of());
     }
 
     private static Instant parseInstant(String raw, String fieldName) {

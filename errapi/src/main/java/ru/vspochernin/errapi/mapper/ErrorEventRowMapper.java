@@ -21,7 +21,7 @@ public class ErrorEventRowMapper implements RowMapper<ErrorEventRow> {
                 rs.getString("service"),
                 rs.getString("level"),
                 rs.getString("message_formatted"),
-                rs.getString("fingerprint"),
+                rs.getString("fingerprint_str"),
                 rs.getString("fingerprint_source"),
                 rs.getString("instance"),
                 rs.getString("service_version"),
