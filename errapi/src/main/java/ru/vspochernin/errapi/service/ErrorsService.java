@@ -20,7 +20,7 @@ import ru.vspochernin.errapi.model.errors.FilterField;
 import ru.vspochernin.errapi.repository.ErrorsRepository;
 import ru.vspochernin.errapi.util.ErrorsFiltersParser;
 import ru.vspochernin.errapi.util.ErrorsQueryParser;
-import ru.vspochernin.errapi.util.UInt64Parser;
+import ru.vspochernin.errapi.util.FingerprintParser;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +46,7 @@ public class ErrorsService {
                 from == null ? null : from.toString(),
                 to == null ? null : to.toString());
 
-        Optional<BigInteger> fingerprintO = UInt64Parser.parseOptional(request.fingerprint(), "fingerprint");
+        Optional<BigInteger> fingerprintO = FingerprintParser.parseOptional(request.fingerprint());
         List<ErrorsFilterCondition> filters = ErrorsFiltersParser.parse(request.filters());
 
         ErrorsQuery query = new ErrorsQuery(base.from(), base.to(), fingerprintO, filters);
