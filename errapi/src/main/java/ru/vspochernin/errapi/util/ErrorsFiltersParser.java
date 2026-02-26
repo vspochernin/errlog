@@ -49,7 +49,7 @@ public class ErrorsFiltersParser {
             if (operation != FilterOp.IN && values.size() != 1) {
                 throw new ErrapiException(
                         ErrapiErrorType.BAD_REQUEST,
-                        "filters.values must contains only one element for operation" + operation.getName());
+                        "filters.values must contains only one element for operation " + operation.getName());
             }
 
             result.add(new ErrorsFilterCondition(field, operation, List.copyOf(values)));
