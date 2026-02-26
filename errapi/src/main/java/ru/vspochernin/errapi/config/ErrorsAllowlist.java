@@ -30,7 +30,8 @@ public class ErrorsAllowlist {
                     Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN, FilterOp.LIKE),
                     "Название сервиса"),
 
-            new FilterField("level",
+            new FilterField(
+                    "level",
                     "level",
                     Set.of(FilterOp.EQ, FilterOp.NE, FilterOp.IN),
                     "Уровень логирования"),
@@ -89,5 +90,5 @@ public class ErrorsAllowlist {
     }
 
     private static final Map<String, FilterField> BY_NAME = FIELDS.stream()
-            .collect(Collectors.toMap(FilterField::name, Function.identity()));
+            .collect(Collectors.toUnmodifiableMap(FilterField::name, Function.identity()));
 }
