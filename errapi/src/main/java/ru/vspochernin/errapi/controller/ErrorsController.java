@@ -1,5 +1,7 @@
 package ru.vspochernin.errapi.controller;
 
+import java.util.Objects;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,11 +35,11 @@ public class ErrorsController {
 
     @PostMapping("/events")
     public ResponseEntity<ErrorsEventsResponse> events(
-            @RequestBody(required = false) ErrorsEventsRequest requestO,
+            @RequestBody(required = false) ErrorsEventsRequest requestOrNull,
             @RequestParam(value = "limit", defaultValue = "10") int limit,
             @RequestParam(value = "offset", defaultValue = "0") long offset)
     {
-        ErrorsEventsRequest request = (requestO == null) ? ErrorsEventsRequest.empty() : requestO;
+        ErrorsEventsRequest request = Objects.requireNonNullElse(requestOrNull, ErrorsEventsRequest.empty());
         ErrorsEventsResponse response = errorsService.getEvents(request, limit, offset);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
