@@ -121,7 +121,7 @@ public class ErrorsRepository {
         String sql = """
                 SELECT
                     count() AS events_total,
-                    uniqExacl(fingerprint) AS groups_total,
+                    uniqExact(fingerprint) AS groups_total
                 FROM %s
                 WHERE %s
                 """.formatted(TABLE, where.sql());
@@ -165,7 +165,7 @@ public class ErrorsRepository {
                 FROM %s
                 WHERE %s
                 GROUP BY fingerprint
-                ORDER BY group_count DESC
+                ORDER BY group_count DESC, group_fingerprint ASC
                 LIMIT :limit OFFSET :offset
                 """.formatted(TABLE, where.sql());
 
@@ -188,10 +188,10 @@ public class ErrorsRepository {
         String sql = """
                 SELECT
                     toStartOfInterval(timestamp, %s) AS bucket_start,
-                    count() AS bucket_count,
+                    count() AS bucket_count
                 FROM %s
                 WHERE %s
-                GROUP BY bucket_start,
+                GROUP BY bucket_start
                 ORDER BY bucket_start ASC
                 """.formatted(intervalSql, TABLE, where.sql());
 
