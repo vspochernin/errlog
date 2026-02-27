@@ -15,13 +15,14 @@ import ru.vspochernin.errapi.exception.ErrapiException;
 @RequiredArgsConstructor
 public enum FilterOperation {
 
-    EQ("eq"),
-    NE("ne"),
-    IN("in"),
-    LIKE("like"),
+    EQ("eq", false),
+    NE("ne", false),
+    IN("in", true),
+    LIKE("like", false),
     ;
 
     private final String name; // Имя операции для передачи в API.
+    private final boolean allowsMultipleValues;
 
     public static FilterOperation byName(String name) {
         return Optional.ofNullable(BY_NAME.get(name))

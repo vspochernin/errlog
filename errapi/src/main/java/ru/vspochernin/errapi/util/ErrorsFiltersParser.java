@@ -22,9 +22,8 @@ public class ErrorsFiltersParser {
         }
 
         List<ErrorsFilter> result = new ArrayList<>(rawFilters.size());
-
-        for (int i = 0; i < rawFilters.size(); i++) {
-            ErrorsRequest.Filter rawFilter = rawFilters.get(i);
+        int i = 0;
+        for (ErrorsRequest.Filter rawFilter : rawFilters) {
             if (rawFilter == null) {
                 throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filters[" + i + "] is null");
             }
@@ -35,35 +34,27 @@ public class ErrorsFiltersParser {
             }
             FilterField field = ErrorsAllowlist.byName(fieldName);
 
-            FilterOperation operation = parseOperation(rawFilter.operation(), i);
-            if (!field.operations().contains(operation)) {
-                throw new ErrapiException(
-                        ErrapiErrorType.BAD_REQUEST,
-                        "filters[" + i + "].operation " + operation.getName() + " unsupported for field " +
-                                field.name());
+            String operationName = rawFilter.operation();
+            if (operationName == null || operationName.isBlank()) {
+                throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filters[" + i + "].operation is null or blank");
             }
+            FilterOperation operation = FilterOperation.byName(operationName);
+            field.checkOperationSupport(operation, i);
 
             List<String> values = rawFilter.values();
             if (values == null || values.isEmpty()) {
                 throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filters[" + i + "].values is empty");
             }
-            if (operation != FilterOperation.IN && values.size() != 1) {
+            if (!operation.isAllowsMultipleValues() && values.size() > 1) {
                 throw new ErrapiException(
                         ErrapiErrorType.BAD_REQUEST,
-                        "filters[" + i + "].values must contain exactly one element for operation " +
-                                operation.getName());
+                        "filters[" + i + "].values must contain only one element for operation " + operation.getName());
             }
 
-            result.add(new ErrorsFilter(field, operation, List.copyOf(values)));
+            result.add(new ErrorsFilter(field, operation, values));
+            i++;
         }
 
         return result;
-    }
-
-    private static FilterOperation parseOperation(String raw, int i) {
-        if (raw == null || raw.isBlank()) {
-            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "filters[" + i + "].operation is null or blank");
-        }
-        return FilterOperation.byName(raw);
     }
 }
