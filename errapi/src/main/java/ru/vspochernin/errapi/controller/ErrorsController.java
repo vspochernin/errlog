@@ -41,6 +41,8 @@ public class ErrorsController {
     {
         ErrorsRequest request = Objects.requireNonNullElse(requestOrNull, ErrorsRequest.empty());
         ErrorsEventsResponse response = errorsService.getEvents(request, limit, offset);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
     }
 }
