@@ -12,7 +12,9 @@ import org.springframework.stereotype.Repository;
 import ru.vspochernin.errapi.mapper.ErrorEventRowMapper;
 import ru.vspochernin.errapi.model.errors.ErrorEventRow;
 import ru.vspochernin.errapi.model.errors.ErrorGroupRow;
+import ru.vspochernin.errapi.model.errors.ErrorTimeseriesRow;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
+import ru.vspochernin.errapi.model.errors.TimeBucket;
 import ru.vspochernin.errapi.model.errors.Totals;
 import ru.vspochernin.errapi.util.ErrorsWhereBuilder;
 
@@ -168,14 +170,36 @@ public class ErrorsRepository {
                 """.formatted(TABLE, where.sql());
 
         return jdbcTemplate.query(sql, params, (rs, rowNum) -> {
-            Timestamp lastSeenTs = rs.getTimestamp("group_last_seen");
-            Instant lastSeen = lastSeenTs != null ? lastSeenTs.toInstant() : null;
+            Timestamp lastSeenTimestamp = rs.getTimestamp("group_last_seen");
+            Instant lastSeen = lastSeenTimestamp != null ? lastSeenTimestamp.toInstant() : null;
 
             String fingerprint = rs.getString("group_fingerprint");
             long count = rs.getLong("group_count");
 
             ErrorEventRow lastEvent = rowMapper.mapRow(rs, rowNum);
             return new ErrorGroupRow(fingerprint, count, lastSeen, lastEvent);
+        });
+    }
+
+    public List<ErrorTimeseriesRow> findTimeseries(ErrorsQuery query, TimeBucket bucket) {
+        ErrorsWhereBuilder.Where where = ErrorsWhereBuilder.buildWhere(query);
+        String intervalSql = bucket.getIntervalSql();
+
+        String sql = """
+                SELECT
+                    toStartOfInterval(timestamp, %s) AS bucket_start,
+                    count() AS bucket_count,
+                FROM %s
+                WHERE %s
+                GROUP BY bucket_start,
+                ORDER BY bucket_start ASC
+                """.formatted(intervalSql, TABLE, where.sql());
+
+        return jdbcTemplate.query(sql, where.params(), (rs, rowNum) -> {
+            Timestamp timestamp = rs.getTimestamp("bucket_start");
+            Instant bucketStart = timestamp != null ? timestamp.toInstant() : null;
+            long count = rs.getLong("bucket_count");
+            return new ErrorTimeseriesRow(bucketStart, count);
         });
     }
 }
