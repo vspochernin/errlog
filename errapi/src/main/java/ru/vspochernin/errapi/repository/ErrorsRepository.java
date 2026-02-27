@@ -1,6 +1,7 @@
 package ru.vspochernin.errapi.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -75,5 +76,36 @@ public class ErrorsRepository {
                 """.formatted(TABLE, where.sql());
 
         return jdbcTemplate.query(sql, params, rowMapper);
+    }
+
+    public Optional<ErrorEventRow> findEventById(String eventId) {
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("eventId", eventId);
+
+        String sql = """
+                SELECT
+                    event_id,
+                    timestamp,
+                    source_type,
+                    service,
+                    level,
+                    message_formatted,
+                    toString(fingerprint) AS fingerprint_str,
+                    fingerprint_source,
+                    instance,
+                    service_version,
+                    logger,
+                    thread,
+                    message_template,
+                    exception_class,
+                    exception_message,
+                    stacktrace
+                FROM %s
+                WHERE event_id = toUUID(:eventId)
+                LIMIT 1
+                """.formatted(TABLE);
+
+        List<ErrorEventRow> rows = jdbcTemplate.query(sql, params, rowMapper);
+        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.getFirst());
     }
 }
