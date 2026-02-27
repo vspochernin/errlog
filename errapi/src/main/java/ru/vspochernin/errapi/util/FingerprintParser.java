@@ -19,18 +19,17 @@ public class FingerprintParser {
             return Optional.empty();
         }
         if (!raw.chars().allMatch(Character::isDigit)) {
-            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "fingerprint должен быть UInt64 строкой");
+            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "fingerprint must be UInt64 string");
         }
 
         BigInteger value;
         try {
             value = new BigInteger(raw);
         } catch (Exception e) {
-            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "fingerprint должен быть UInt64 строкой");
+            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "fingerprint must be UInt64 string");
         }
-
         if (value.signum() < 0 || value.compareTo(MAX_UINT64) > 0) {
-            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "fingerprint вне диапазона UInt64");
+            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "fingerprint is out of range UInt64");
         }
 
         return Optional.of(value);
