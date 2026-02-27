@@ -1,14 +1,22 @@
 package ru.vspochernin.errapi.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.vspochernin.errapi.config.ErrorsAllowlist;
+import ru.vspochernin.errapi.dto.errors.ErrorsEventResponse;
+import ru.vspochernin.errapi.dto.errors.ErrorsGroupsResponse;
 import ru.vspochernin.errapi.dto.errors.ErrorsRequest;
 import ru.vspochernin.errapi.dto.errors.ErrorsEventsResponse;
 import ru.vspochernin.errapi.dto.errors.ErrorsFiltersResponse;
+import ru.vspochernin.errapi.dto.errors.ErrorsTimeseriesResponse;
+import ru.vspochernin.errapi.exception.ErrapiErrorType;
+import ru.vspochernin.errapi.exception.ErrapiException;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
+import ru.vspochernin.errapi.model.errors.TimeBucket;
+import ru.vspochernin.errapi.model.errors.Totals;
 import ru.vspochernin.errapi.repository.ErrorsRepository;
 import ru.vspochernin.errapi.util.ValidationUtils;
 
@@ -35,5 +43,45 @@ public class ErrorsService {
                 .toList();
 
         return new ErrorsEventsResponse(items, eventsTotal);
+    }
+
+    public ErrorsEventResponse getEventById(String eventId) {
+        try {
+            UUID.fromString(eventId);
+        } catch (Exception e) {
+            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "eventId must be UUID");
+        }
+
+        return errorsRepository.findEventById(eventId)
+                .map(ErrorsEventResponse::fromRow)
+                .orElseThrow(() -> new ErrapiException(ErrapiErrorType.NOT_FOUND, "Event not found"));
+    }
+
+    public ErrorsGroupsResponse getGroups(ErrorsRequest request, int limit, long offset) {
+        ValidationUtils.validateLimitOffset(limit, offset);
+
+        ErrorsQuery query = ErrorsQuery.parseFromErrorsRequest(request);
+
+        Totals totals = errorsRepository.countEventsAndGroups(query);
+
+        List<ErrorsGroupsResponse.Item> items = errorsRepository.findGroups(query, limit, offset).stream()
+                .map(ErrorsGroupsResponse.Item::fromRow)
+                .toList();
+
+        return new ErrorsGroupsResponse(items, totals.eventsTotal(), totals.groupsTotal());
+    }
+
+    public ErrorsTimeseriesResponse getTimeseries(ErrorsRequest request, String bucketRaw) {
+        ErrorsQuery query = ErrorsQuery.parseFromErrorsRequest(request);
+
+        TimeBucket bucket = (bucketRaw == null || bucketRaw.isBlank())
+                ? TimeBucket.byTimeWindow(query.timeWindow())
+                : TimeBucket.byName(bucketRaw);
+
+        List<ErrorsTimeseriesResponse.Item> items = errorsRepository.findTimeseries(query, bucket).stream()
+                .map(ErrorsTimeseriesResponse.Item::fromRow)
+                .toList();
+
+        return new ErrorsTimeseriesResponse(items);
     }
 }
