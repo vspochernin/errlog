@@ -16,12 +16,12 @@ public class ErrorsWhereBuilder {
     public static Where buildWhere(ErrorsQuery query) {
         MapSqlParameterSource params = new MapSqlParameterSource();
 
-        StringBuilder where = new StringBuilder("timestamp >= :from AND timestamp < :to");
+        StringBuilder whereSB = new StringBuilder("timestamp >= :from AND timestamp < :to");
         params.addValue("from", Timestamp.from(query.timeWindow().from()));
         params.addValue("to", Timestamp.from(query.timeWindow().to()));
 
         query.fingerprintO().ifPresent(fingerprint -> {
-            where.append(" AND fingerprint = toUInt64(:fingerprint)");
+            whereSB.append(" AND fingerprint = toUInt64(:fingerprint)");
             params.addValue("fingerprint", fingerprint.toString());
         });
 
@@ -32,19 +32,19 @@ public class ErrorsWhereBuilder {
 
             switch (filter.operation()) {
                 case EQ -> {
-                    where.append(" AND ").append(column).append(" = :").append(paramBase);
+                    whereSB.append(" AND ").append(column).append(" = :").append(paramBase);
                     params.addValue(paramBase, filter.values().getFirst());
                 }
                 case NE -> {
-                    where.append(" AND ").append(column).append(" != :").append(paramBase);
+                    whereSB.append(" AND ").append(column).append(" != :").append(paramBase);
                     params.addValue(paramBase, filter.values().getFirst());
                 }
                 case IN -> {
-                    where.append(" AND ").append(column).append(" IN (:").append(paramBase).append(")");
-                    params.addValue(paramBase, filter.values());
+                    whereSB.append(" AND ").append(column).append(" IN (:").append(paramBase).append(")");
+                    params.addValue(paramBase, filter.values()); // JDBC сам перечислит список параметров через запятую.
                 }
                 case LIKE -> {
-                    where.append(" AND ").append(column).append(" LIKE :").append(paramBase);
+                    whereSB.append(" AND ").append(column).append(" LIKE :").append(paramBase);
                     params.addValue(paramBase, filter.values().getFirst());
                 }
                 default -> throw new ErrapiException(
@@ -54,7 +54,7 @@ public class ErrorsWhereBuilder {
             n++;
         }
 
-        return new Where(where.toString(), params);
+        return new Where(whereSB.toString(), params);
     }
 
     public record Where(String sql, MapSqlParameterSource params) {
