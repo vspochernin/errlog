@@ -1,5 +1,7 @@
 package ru.vspochernin.errapi.repository;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,6 +11,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.vspochernin.errapi.mapper.ErrorEventRowMapper;
 import ru.vspochernin.errapi.model.errors.ErrorEventRow;
+import ru.vspochernin.errapi.model.errors.ErrorGroupRow;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
 import ru.vspochernin.errapi.model.errors.Totals;
 import ru.vspochernin.errapi.util.ErrorsWhereBuilder;
@@ -125,5 +128,54 @@ public class ErrorsRepository {
                 new Totals(rs.getLong("events_total"), rs.getLong("groups_total")));
 
         return totals == null ? new Totals(0L, 0L) : totals;
+    }
+
+    public List<ErrorGroupRow> findGroups(ErrorsQuery query, int limit, long offset) {
+        ErrorsWhereBuilder.Where where = ErrorsWhereBuilder.buildWhere(query);
+
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValues(where.params().getValues());
+        params.addValue("limit", limit);
+        params.addValue("offset", offset);
+
+        String sql = """
+                SELECT
+                    toString(fingerprint) AS group_fingerprint,
+                    count() AS group_count,
+                    max(timestamp) AS group_last_seen,
+                
+                    toString(argMax(event_id, timestamp)) AS event_id,
+                    max(timestamp) AS timestamp,
+                    argMax(source_type, timestamp) AS source_type,
+                    argMax(service, timestamp) AS service,
+                    argMax(level, timestamp) AS level,
+                    argMax(message_formatted, timestamp) AS message_formatted,
+                    toString(fingerprint) AS fingerprint_str,
+                    argMax(fingerprint_source, timestamp) AS fingerprint_source,
+                    argMax(instance, timestamp) AS instance,
+                    argMax(service_version, timestamp) AS service_version,
+                    argMax(logger, timestamp) AS logger,
+                    argMax(thread, timestamp) AS thread,
+                    argMax(message_template, timestamp) AS message_template,
+                    argMax(exception_class, timestamp) AS exception_class,
+                    argMax(exception_message, timestamp) AS exception_message,
+                    CAST(NULL, 'Nullable(String)') AS stacktrace
+                FROM %s
+                WHERE %s
+                GROUP BY fingerprint
+                ORDER BY group_count DESC
+                LIMIT :limit OFFSET :offset
+                """.formatted(TABLE, where.sql());
+
+        return jdbcTemplate.query(sql, params, (rs, rowNum) -> {
+            Timestamp lastSeenTs = rs.getTimestamp("group_last_seen");
+            Instant lastSeen = lastSeenTs != null ? lastSeenTs.toInstant() : null;
+
+            String fingerprint = rs.getString("group_fingerprint");
+            long count = rs.getLong("group_count");
+
+            ErrorEventRow lastEvent = rowMapper.mapRow(rs, rowNum);
+            return new ErrorGroupRow(fingerprint, count, lastSeen, lastEvent);
+        });
     }
 }
