@@ -27,23 +27,23 @@ public record ErrorsEventsResponse(
             String exceptionClass,
             String exceptionMessage)
     {
-        public static Item fromRow(ErrorEventRow r) {
+        public static Item fromRow(ErrorEventRow row) {
             return new Item(
-                    r.eventId(),
-                    r.timestamp(),
-                    r.sourceType(),
-                    r.service(),
-                    r.level(),
-                    r.messageFormatted(),
-                    r.fingerprint(),
-                    r.fingerprintSource(),
-                    r.instance(),
-                    r.serviceVersion(),
-                    r.logger(),
-                    r.thread(),
-                    r.messageTemplate(),
-                    r.exceptionClass(),
-                    r.exceptionMessage());
+                    row.eventId(),
+                    row.timestamp(),
+                    row.sourceType(),
+                    row.service(),
+                    row.level(),
+                    row.messageFormatted(),
+                    row.fingerprint(),
+                    row.fingerprintSource(),
+                    row.instance(),
+                    row.serviceVersion(),
+                    row.logger(),
+                    row.thread(),
+                    row.messageTemplate(),
+                    row.exceptionClass(),
+                    row.exceptionMessage());
         }
     }
 }
