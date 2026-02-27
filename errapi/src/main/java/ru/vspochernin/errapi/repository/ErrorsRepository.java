@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import ru.vspochernin.errapi.mapper.ErrorEventRowMapper;
 import ru.vspochernin.errapi.model.errors.ErrorEventRow;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
+import ru.vspochernin.errapi.model.errors.Totals;
 import ru.vspochernin.errapi.util.ErrorsWhereBuilder;
 
 @Repository
@@ -107,5 +108,22 @@ public class ErrorsRepository {
 
         List<ErrorEventRow> rows = jdbcTemplate.query(sql, params, rowMapper);
         return rows.isEmpty() ? Optional.empty() : Optional.of(rows.getFirst());
+    }
+
+    public Totals countEventsAndGroups(ErrorsQuery query) {
+        ErrorsWhereBuilder.Where where = ErrorsWhereBuilder.buildWhere(query);
+
+        String sql = """
+                SELECT
+                    count() AS events_total,
+                    uniqExacl(fingerprint) AS groups_total,
+                FROM %s
+                WHERE %s
+                """.formatted(TABLE, where.sql());
+
+        Totals totals = jdbcTemplate.queryForObject(sql, where.params(), (rs, rowNum) ->
+                new Totals(rs.getLong("events_total"), rs.getLong("groups_total")));
+
+        return totals == null ? new Totals(0L, 0L) : totals;
     }
 }
