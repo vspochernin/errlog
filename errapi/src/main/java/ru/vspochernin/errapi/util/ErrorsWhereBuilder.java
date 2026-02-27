@@ -1,6 +1,7 @@
 package ru.vspochernin.errapi.util;
 
 import java.sql.Timestamp;
+import java.util.function.UnaryOperator;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
@@ -14,20 +15,27 @@ public class ErrorsWhereBuilder {
     }
 
     public static Where buildWhere(ErrorsQuery query) {
+        return buildWhere(query, column -> column);
+    }
+
+    public static Where buildWhere(ErrorsQuery query, UnaryOperator<String> columnQualifier) {
         MapSqlParameterSource params = new MapSqlParameterSource();
 
-        StringBuilder whereSB = new StringBuilder("timestamp >= :from AND timestamp < :to");
+        String timestampColumn = columnQualifier.apply("timestamp");
+        String fingerprintColumn = columnQualifier.apply("fingerprint");
+
+        StringBuilder whereSB = new StringBuilder(timestampColumn + " >= :from AND " + timestampColumn + " < :to");
         params.addValue("from", Timestamp.from(query.timeWindow().from()));
         params.addValue("to", Timestamp.from(query.timeWindow().to()));
 
         query.fingerprintO().ifPresent(fingerprint -> {
-            whereSB.append(" AND fingerprint = toUInt64(:fingerprint)");
+            whereSB.append(" AND ").append(fingerprintColumn).append(" = toUInt64(:fingerprint)");
             params.addValue("fingerprint", fingerprint.toString());
         });
 
         int n = 0;
         for (ErrorsFilter filter : query.filters()) {
-            String column = filter.field().column();
+            String column = columnQualifier.apply(filter.field().column());
             String paramBase = "filter_" + n;
 
             switch (filter.operation()) {
