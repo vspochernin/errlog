@@ -1,0 +1,37 @@
+package ru.vspochernin.errapi.util;
+
+import java.math.BigInteger;
+import java.util.Optional;
+
+import ru.vspochernin.errapi.exception.ErrapiErrorType;
+import ru.vspochernin.errapi.exception.ErrapiException;
+
+public class FingerprintParser {
+
+    // 2^64 - 1.
+    private static final BigInteger MAX_UINT64 = BigInteger.ONE.shiftLeft(64).subtract(BigInteger.ONE);
+
+    private FingerprintParser() {
+    }
+
+    public static Optional<BigInteger> parseO(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return Optional.empty();
+        }
+        if (!raw.chars().allMatch(Character::isDigit)) {
+            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "fingerprint must be UInt64 string");
+        }
+
+        BigInteger value;
+        try {
+            value = new BigInteger(raw);
+        } catch (Exception e) {
+            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "fingerprint must be UInt64 string");
+        }
+        if (value.signum() < 0 || value.compareTo(MAX_UINT64) > 0) {
+            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "fingerprint is out of range UInt64");
+        }
+
+        return Optional.of(value);
+    }
+}

@@ -1,20 +1,22 @@
 package ru.vspochernin.errapi.model.errors;
 
-import java.util.List;
+import java.util.Set;
 
-import ru.vspochernin.errapi.dto.errors.FilterFieldDto;
+import ru.vspochernin.errapi.exception.ErrapiErrorType;
+import ru.vspochernin.errapi.exception.ErrapiException;
 
 public record FilterField(
-        String name, // Имя для передачи в API.
+        String name, // Имя фильтра для передачи в API.
         String column, // Название соответствующей колонки в ClickHouse.
-        List<FilterOp> ops,
+        Set<FilterOperation> operations,  // Допустимые для фильтра операции.
         String description)
 {
-    public FilterFieldDto toDto()
-    {
-        List<String> opNames = ops.stream()
-                .map(FilterOp::getName)
-                .toList();
-        return new FilterFieldDto(name, opNames, description);
+
+    public void checkOperationSupport(FilterOperation operation, int i) {
+        if (!operations.contains(operation)) {
+            throw new ErrapiException(
+                    ErrapiErrorType.BAD_REQUEST,
+                    "filters[" + i + "].operation " + operation.getName() + " unsupported for field " + name);
+        }
     }
 }

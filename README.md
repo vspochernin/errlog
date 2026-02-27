@@ -115,7 +115,7 @@ export ERRLOG_OWNER_JWT="<token>"
 curl -H "Authorization: Bearer $ERRLOG_OWNER_JWT" http://localhost:8080/api/users
 ```
 
-- Проверить Errors API (шаг 1):
+- Проверить Errors API (текущий контракт):
 
 - Allowlist фильтров:
 ```bash
@@ -124,10 +124,29 @@ curl -sS -H "Authorization: Bearer $ERRLOG_OWNER_JWT" "http://localhost:8080/api
 
 - Список событий (по умолчанию последние 24 часа; без `stacktrace`):
 ```bash
-curl -sS -H "Authorization: Bearer $ERRLOG_OWNER_JWT" "http://localhost:8080/api/errors/events"
+curl -sS \
+  -H "Authorization: Bearer $ERRLOG_OWNER_JWT" \
+  -H "Content-Type: application/json" \
+  -X POST "http://localhost:8080/api/errors/events?limit=10&offset=0" \
+  -d '{}'
 ```
 
 - С явными границами времени:
 ```bash
-curl -sS -H "Authorization: Bearer $ERRLOG_OWNER_JWT" "http://localhost:8080/api/errors/events?from=2026-02-24T00:00:00Z&to=2026-02-25T00:00:00Z&limit=20&offset=0"
+curl -sS \
+  -H "Authorization: Bearer $ERRLOG_OWNER_JWT" \
+  -H "Content-Type: application/json" \
+  -X POST "http://localhost:8080/api/errors/events?limit=20&offset=0" \
+  -d '{"from":"2026-02-24T00:00:00Z","to":"2026-02-25T00:00:00Z"}'
 ```
+
+- Пример фильтров (AND-only):
+```bash
+curl -sS \
+  -H "Authorization: Bearer $ERRLOG_OWNER_JWT" \
+  -H "Content-Type: application/json" \
+  -X POST "http://localhost:8080/api/errors/events?limit=20&offset=0" \
+  -d '{"to":"2026-02-25T00:00:00Z","filters":[{"field":"service","operation":"eq","values":["jerrgen"]},{"field":"level","operation":"in","values":["ERROR"]}]}'
+```
+
+- Примечание про стабильную пагинацию: чтобы новые события не «вклинивались» между страницами, клиент может зафиксировать `to` на момент первого запроса и повторно использовать его при запросе следующих страниц (меняя только `offset`).
