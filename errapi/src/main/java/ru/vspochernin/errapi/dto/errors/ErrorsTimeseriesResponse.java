@@ -7,7 +7,7 @@ import ru.vspochernin.errapi.model.errors.ErrorTimeseriesRow;
 
 public record ErrorsTimeseriesResponse(
         List<Item> items,
-        String bucket)
+        String bucketSize)
 {
 
     public record Item(
