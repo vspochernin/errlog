@@ -58,7 +58,6 @@ public class ErrorsService {
         ErrorsQuery query = ErrorsQuery.parseFromErrorsRequest(request);
 
         EventsAndGroupsTotals totals = errorsRepository.countEventsAndGroupsTotals(query);
-
         List<ErrorsGroupsResponse.Item> items = errorsRepository.findGroups(query, limit, offset).stream()
                 .map(ErrorsGroupsResponse.Item::fromRow)
                 .toList();
