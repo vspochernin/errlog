@@ -18,11 +18,11 @@ public class ErrorsWhereBuilder {
         return buildWhere(query, column -> column);
     }
 
-    public static Where buildWhere(ErrorsQuery query, UnaryOperator<String> columnQualifier) {
+    public static Where buildWhere(ErrorsQuery query, UnaryOperator<String> columnPrefix) {
         MapSqlParameterSource params = new MapSqlParameterSource();
 
-        String timestampColumn = columnQualifier.apply("timestamp");
-        String fingerprintColumn = columnQualifier.apply("fingerprint");
+        String timestampColumn = columnPrefix.apply("timestamp");
+        String fingerprintColumn = columnPrefix.apply("fingerprint");
 
         StringBuilder whereSB = new StringBuilder(timestampColumn + " >= :from AND " + timestampColumn + " < :to");
         params.addValue("from", Timestamp.from(query.timeWindow().from()));
@@ -35,7 +35,7 @@ public class ErrorsWhereBuilder {
 
         int n = 0;
         for (ErrorsFilter filter : query.filters()) {
-            String column = columnQualifier.apply(filter.field().column());
+            String column = columnPrefix.apply(filter.field().column());
             String paramBase = "filter_" + n;
 
             switch (filter.operation()) {
