@@ -133,7 +133,7 @@ public class ErrorsRepository {
     }
 
     public List<ErrorGroupRow> findGroups(ErrorsQuery query, int limit, long offset) {
-        ErrorsWhereBuilder.Where where = ErrorsWhereBuilder.buildWhere(query, column -> "table." + column);
+        ErrorsWhereBuilder.Where where = ErrorsWhereBuilder.buildWhere(query, column -> "src." + column);
 
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValues(where.params().getValues());
@@ -142,30 +142,30 @@ public class ErrorsRepository {
 
         String sql = """
                 SELECT
-                    toString(table.fingerprint) AS group_fingerprint,
+                    toString(src.fingerprint) AS group_fingerprint,
                     count() AS group_count,
-                    max(table.timestamp) AS group_last_seen,
+                    max(src.timestamp) AS group_last_seen,
                 
-                    toString(argMax(table.event_id, table.timestamp)) AS event_id,
-                    max(table.timestamp) AS timestamp,
-                    argMax(table.source_type, table.timestamp) AS source_type,
-                    argMax(table.service, table.timestamp) AS service,
-                    argMax(table.level, table.timestamp) AS level,
-                    argMax(table.message_formatted, table.timestamp) AS message_formatted,
-                    toString(table.fingerprint) AS fingerprint_str,
-                    argMax(table.fingerprint_source, table.timestamp) AS fingerprint_source,
-                    argMax(table.instance, table.timestamp) AS instance,
-                    argMax(table.service_version, table.timestamp) AS service_version,
-                    argMax(table.logger, table.timestamp) AS logger,
-                    argMax(table.thread, table.timestamp) AS thread,
-                    argMax(table.message_template, table.timestamp) AS message_template,
-                    argMax(table.exception_class, table.timestamp) AS exception_class,
-                    argMax(table.exception_message, table.timestamp) AS exception_message,
+                    toString(argMax(src.event_id, tuple(src.timestamp, src.event_id))) AS event_id,
+                    max(src.timestamp) AS timestamp,
+                    argMax(src.source_type, tuple(src.timestamp, src.event_id)) AS source_type,
+                    argMax(src.service, tuple(src.timestamp, src.event_id)) AS service,
+                    argMax(src.level, tuple(src.timestamp, src.event_id)) AS level,
+                    argMax(src.message_formatted, tuple(src.timestamp, src.event_id)) AS message_formatted,
+                    toString(src.fingerprint) AS fingerprint_str,
+                    argMax(src.fingerprint_source, tuple(src.timestamp, src.event_id)) AS fingerprint_source,
+                    argMax(src.instance, tuple(src.timestamp, src.event_id)) AS instance,
+                    argMax(src.service_version, tuple(src.timestamp, src.event_id)) AS service_version,
+                    argMax(src.logger, tuple(src.timestamp, src.event_id)) AS logger,
+                    argMax(src.thread, tuple(src.timestamp, src.event_id)) AS thread,
+                    argMax(src.message_template, tuple(src.timestamp, src.event_id)) AS message_template,
+                    argMax(src.exception_class, tuple(src.timestamp, src.event_id)) AS exception_class,
+                    argMax(src.exception_message, tuple(src.timestamp, src.event_id)) AS exception_message,
                     CAST(NULL, 'Nullable(String)') AS stacktrace
-                FROM %s table
+                FROM %s src
                 WHERE %s
-                GROUP BY table.fingerprint
-                ORDER BY group_count DESC, group_fingerprint DESC
+                GROUP BY src.fingerprint
+                ORDER BY group_count DESC, group_last_seen DESC, group_fingerprint DESC
                 LIMIT :limit OFFSET :offset
                 """.formatted(TABLE, where.sql());
 
