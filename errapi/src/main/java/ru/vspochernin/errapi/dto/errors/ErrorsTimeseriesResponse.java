@@ -6,6 +6,7 @@ import java.util.List;
 import ru.vspochernin.errapi.model.errors.ErrorTimeseriesRow;
 
 public record ErrorsTimeseriesResponse(
+        String bucket,
         List<Item> items)
 {
 
