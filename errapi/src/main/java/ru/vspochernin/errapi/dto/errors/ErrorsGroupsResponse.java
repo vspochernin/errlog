@@ -12,18 +12,18 @@ public record ErrorsGroupsResponse(
 {
 
     public record Item(
-            String fingerprint,
-            long count,
-            Instant lastSeen,
-            ErrorsEventsResponse.Item lastItem)
+            String groupFingerprint,
+            long groupCount,
+            Instant groupLastSeen,
+            ErrorSmallDto lastEvent)
     {
 
         public static Item fromRow(ErrorGroupRow row) {
             return new Item(
-                    row.fingerprint(),
-                    row.count(),
-                    row.lastSeen(),
-                    ErrorsEventsResponse.Item.fromRow(row.lastEvent()));
+                    row.groupFingerprint(),
+                    row.groupCount(),
+                    row.groupLastSeen(),
+                    ErrorSmallDto.fromRow(row.lastEvent()));
         }
     }
 }
