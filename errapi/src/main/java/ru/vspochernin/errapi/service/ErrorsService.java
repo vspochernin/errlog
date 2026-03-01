@@ -16,7 +16,7 @@ import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
 import ru.vspochernin.errapi.model.errors.TimeBucket;
-import ru.vspochernin.errapi.model.errors.Totals;
+import ru.vspochernin.errapi.model.errors.EventsAndGroupsTotals;
 import ru.vspochernin.errapi.repository.ErrorsRepository;
 import ru.vspochernin.errapi.util.ValidationUtils;
 
@@ -62,7 +62,7 @@ public class ErrorsService {
 
         ErrorsQuery query = ErrorsQuery.parseFromErrorsRequest(request);
 
-        Totals totals = errorsRepository.countEventsAndGroups(query);
+        EventsAndGroupsTotals totals = errorsRepository.countEventsAndGroupsTotals(query);
 
         List<ErrorsGroupsResponse.Item> items = errorsRepository.findGroups(query, limit, offset).stream()
                 .map(ErrorsGroupsResponse.Item::fromRow)

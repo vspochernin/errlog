@@ -6,7 +6,6 @@ public record ErrorGroupRow(
         String groupFingerprint,
         long groupCount,
         Instant groupLastSeen,
-        ErrorEventRow lastEvent
-)
+        ErrorEventRow lastEvent)
 {
 }

@@ -13,6 +13,7 @@ public record ErrorsEventsResponse(
     public record Item(
             @JsonUnwrapped ErrorSmallDto dto)
     {
+
         public static Item fromRow(ErrorEventRow row) {
             return new Item(ErrorSmallDto.fromRow(row));
         }

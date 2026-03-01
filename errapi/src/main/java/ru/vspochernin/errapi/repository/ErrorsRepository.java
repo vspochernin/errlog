@@ -15,7 +15,7 @@ import ru.vspochernin.errapi.model.errors.ErrorGroupRow;
 import ru.vspochernin.errapi.model.errors.ErrorTimeseriesRow;
 import ru.vspochernin.errapi.model.errors.ErrorsQuery;
 import ru.vspochernin.errapi.model.errors.TimeBucket;
-import ru.vspochernin.errapi.model.errors.Totals;
+import ru.vspochernin.errapi.model.errors.EventsAndGroupsTotals;
 import ru.vspochernin.errapi.util.ErrorsWhereBuilder;
 
 @Repository
@@ -24,15 +24,15 @@ public class ErrorsRepository {
     private static final String TABLE = "errlog_ch.error_events";
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final ErrorEventRowMapper rowMapper;
+    private final ErrorEventRowMapper errorEventRowMapper;
 
     public ErrorsRepository(
             @Qualifier("clickhouseJdbcTemplate")
             NamedParameterJdbcTemplate jdbcTemplate,
-            ErrorEventRowMapper rowMapper)
+            ErrorEventRowMapper errorEventRowMapper)
     {
         this.jdbcTemplate = jdbcTemplate;
-        this.rowMapper = rowMapper;
+        this.errorEventRowMapper = errorEventRowMapper;
     }
 
     public long countEvents(ErrorsQuery query) {
@@ -81,7 +81,7 @@ public class ErrorsRepository {
                 LIMIT :limit OFFSET :offset
                 """.formatted(TABLE, where.sql());
 
-        return jdbcTemplate.query(sql, params, rowMapper);
+        return jdbcTemplate.query(sql, params, errorEventRowMapper);
     }
 
     public Optional<ErrorEventRow> findEventById(String eventId) {
@@ -111,11 +111,11 @@ public class ErrorsRepository {
                 LIMIT 1
                 """.formatted(TABLE);
 
-        List<ErrorEventRow> rows = jdbcTemplate.query(sql, params, rowMapper);
+        List<ErrorEventRow> rows = jdbcTemplate.query(sql, params, errorEventRowMapper);
         return rows.isEmpty() ? Optional.empty() : Optional.of(rows.getFirst());
     }
 
-    public Totals countEventsAndGroups(ErrorsQuery query) {
+    public EventsAndGroupsTotals countEventsAndGroupsTotals(ErrorsQuery query) {
         ErrorsWhereBuilder.Where where = ErrorsWhereBuilder.buildWhere(query);
 
         String sql = """
@@ -126,10 +126,10 @@ public class ErrorsRepository {
                 WHERE %s
                 """.formatted(TABLE, where.sql());
 
-        Totals totals = jdbcTemplate.queryForObject(sql, where.params(), (rs, rowNum) ->
-                new Totals(rs.getLong("events_total"), rs.getLong("groups_total")));
+        EventsAndGroupsTotals eventsAndGroupsTotals = jdbcTemplate.queryForObject(sql, where.params(), (rs, rowNum) ->
+                new EventsAndGroupsTotals(rs.getLong("events_total"), rs.getLong("groups_total")));
 
-        return totals == null ? new Totals(0L, 0L) : totals;
+        return eventsAndGroupsTotals == null ? new EventsAndGroupsTotals(0L, 0L) : eventsAndGroupsTotals;
     }
 
     public List<ErrorGroupRow> findGroups(ErrorsQuery query, int limit, long offset) {
@@ -176,7 +176,7 @@ public class ErrorsRepository {
             String fingerprint = rs.getString("group_fingerprint");
             long count = rs.getLong("group_count");
 
-            ErrorEventRow lastEvent = rowMapper.mapRow(rs, rowNum);
+            ErrorEventRow lastEvent = errorEventRowMapper.mapRow(rs, rowNum);
             return new ErrorGroupRow(fingerprint, count, lastSeen, lastEvent);
         });
     }

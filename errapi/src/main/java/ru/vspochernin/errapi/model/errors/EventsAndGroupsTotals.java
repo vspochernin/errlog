@@ -1,6 +1,6 @@
 package ru.vspochernin.errapi.model.errors;
 
-public record Totals(
+public record EventsAndGroupsTotals(
         long eventsTotal,
         long groupsTotal)
 {
