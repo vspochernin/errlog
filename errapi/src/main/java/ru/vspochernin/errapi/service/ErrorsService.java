@@ -1,7 +1,6 @@
 package ru.vspochernin.errapi.service;
 
 import java.util.List;
-import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -46,11 +45,7 @@ public class ErrorsService {
     }
 
     public ErrorsEventResponse getEventById(String eventId) {
-        try {
-            UUID.fromString(eventId);
-        } catch (Exception e) {
-            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "eventId must be UUID");
-        }
+        ValidationUtils.validateUuid(eventId);
 
         return errorsRepository.findEventById(eventId)
                 .map(ErrorsEventResponse::fromRow)
