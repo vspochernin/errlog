@@ -51,7 +51,7 @@ public class ErrorsController {
     }
 
     @GetMapping("/events/{eventId}")
-    public ResponseEntity<ErrorsEventResponse> event(@PathVariable("eventId") String eventId) {
+    public ResponseEntity<ErrorsEventResponse> event(@PathVariable String eventId) {
         ErrorsEventResponse response = errorsService.getEventById(eventId);
         return ResponseEntity
                 .status(HttpStatus.OK)
