@@ -1,5 +1,7 @@
 package ru.vspochernin.errapi.util;
 
+import java.util.UUID;
+
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
 import ru.vspochernin.errapi.exception.ErrapiException;
 
@@ -19,6 +21,14 @@ public class ValidationUtils {
         }
         if (offset < 0L) {
             throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "Offset can't be negative");
+        }
+    }
+
+    public static void validateUuid(String uuid) {
+        try {
+            UUID.fromString(uuid);
+        } catch (Exception e) {
+            throw new ErrapiException(ErrapiErrorType.BAD_REQUEST, "eventId must be UUID");
         }
     }
 }

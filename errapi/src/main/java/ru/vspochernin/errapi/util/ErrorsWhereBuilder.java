@@ -14,20 +14,27 @@ public class ErrorsWhereBuilder {
     }
 
     public static Where buildWhere(ErrorsQuery query) {
+        return buildWhere(query, "");
+    }
+
+    public static Where buildWhere(ErrorsQuery query, String columnPrefix) {
         MapSqlParameterSource params = new MapSqlParameterSource();
 
-        StringBuilder whereSB = new StringBuilder("timestamp >= :from AND timestamp < :to");
+        String timestampColumn = columnPrefix + "timestamp";
+        String fingerprintColumn = columnPrefix + "fingerprint";
+
+        StringBuilder whereSB = new StringBuilder(timestampColumn + " >= :from AND " + timestampColumn + " < :to");
         params.addValue("from", Timestamp.from(query.timeWindow().from()));
         params.addValue("to", Timestamp.from(query.timeWindow().to()));
 
         query.fingerprintO().ifPresent(fingerprint -> {
-            whereSB.append(" AND fingerprint = toUInt64(:fingerprint)");
+            whereSB.append(" AND ").append(fingerprintColumn).append(" = toUInt64(:fingerprint)");
             params.addValue("fingerprint", fingerprint.toString());
         });
 
         int n = 0;
         for (ErrorsFilter filter : query.filters()) {
-            String column = filter.field().column();
+            String column = columnPrefix + filter.field().column();
             String paramBase = "filter_" + n;
 
             switch (filter.operation()) {
