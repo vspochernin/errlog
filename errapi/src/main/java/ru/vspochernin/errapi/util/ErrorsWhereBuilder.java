@@ -1,7 +1,6 @@
 package ru.vspochernin.errapi.util;
 
 import java.sql.Timestamp;
-import java.util.function.UnaryOperator;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import ru.vspochernin.errapi.exception.ErrapiErrorType;
@@ -15,14 +14,14 @@ public class ErrorsWhereBuilder {
     }
 
     public static Where buildWhere(ErrorsQuery query) {
-        return buildWhere(query, column -> column);
+        return buildWhere(query, "");
     }
 
-    public static Where buildWhere(ErrorsQuery query, UnaryOperator<String> columnPrefix) {
+    public static Where buildWhere(ErrorsQuery query, String columnPrefix) {
         MapSqlParameterSource params = new MapSqlParameterSource();
 
-        String timestampColumn = columnPrefix.apply("timestamp");
-        String fingerprintColumn = columnPrefix.apply("fingerprint");
+        String timestampColumn = columnPrefix + "timestamp";
+        String fingerprintColumn = columnPrefix + "fingerprint";
 
         StringBuilder whereSB = new StringBuilder(timestampColumn + " >= :from AND " + timestampColumn + " < :to");
         params.addValue("from", Timestamp.from(query.timeWindow().from()));
@@ -35,7 +34,7 @@ public class ErrorsWhereBuilder {
 
         int n = 0;
         for (ErrorsFilter filter : query.filters()) {
-            String column = columnPrefix.apply(filter.field().column());
+            String column = columnPrefix + filter.field().column();
             String paramBase = "filter_" + n;
 
             switch (filter.operation()) {

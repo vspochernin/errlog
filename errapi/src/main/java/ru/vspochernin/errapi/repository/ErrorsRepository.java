@@ -133,7 +133,7 @@ public class ErrorsRepository {
     }
 
     public List<ErrorGroupRow> findGroups(ErrorsQuery query, int limit, long offset) {
-        ErrorsWhereBuilder.Where where = ErrorsWhereBuilder.buildWhere(query, column -> "src." + column);
+        ErrorsWhereBuilder.Where where = ErrorsWhereBuilder.buildWhere(query, "src.");
 
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValues(where.params().getValues());
