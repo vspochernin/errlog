@@ -146,8 +146,8 @@ public class ErrorsRepository {
                     count() AS group_count,
                     max(src.timestamp) AS group_last_seen,
                 
-                    toString(argMax(src.event_id, tuple(src.timestamp, src.event_id))) AS event_id,
-                    max(src.timestamp) AS timestamp,
+                    argMax(src.event_id, tuple(src.timestamp, src.event_id)) AS event_id,
+                    argMax(src.timestamp, tuple(src.timestamp, src.event_id)) AS timestamp,
                     argMax(src.source_type, tuple(src.timestamp, src.event_id)) AS source_type,
                     argMax(src.service, tuple(src.timestamp, src.event_id)) AS service,
                     argMax(src.level, tuple(src.timestamp, src.event_id)) AS level,
