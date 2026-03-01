@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS errlog_ch.error_events
     exception_message  Nullable(String),
     stacktrace         Nullable(String),
 
-    INDEX idx_message_formatted_ngram message_formatted TYPE ngrambf_v1(3, 10000, 3, 7) GRANULARITY 1
+    INDEX message_formatted_ngram message_formatted TYPE ngrambf_v1(3, 10000, 3, 7) GRANULARITY 1
 )
     ENGINE = MergeTree
         PARTITION BY toYYYYMM(timestamp)
