@@ -82,6 +82,6 @@ public class ErrorsService {
                 .map(ErrorsTimeseriesResponse.Item::fromRow)
                 .toList();
 
-        return new ErrorsTimeseriesResponse(bucket.getName(), items);
+        return new ErrorsTimeseriesResponse(items, bucket.getName());
     }
 }
