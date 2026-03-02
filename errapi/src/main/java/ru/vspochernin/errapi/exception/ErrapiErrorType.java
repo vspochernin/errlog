@@ -17,11 +17,11 @@ public enum ErrapiErrorType {
     INVALID_EMAIL(4, "Invalid email", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(5, "Invalid password", HttpStatus.BAD_REQUEST),
 
-    PASSWORD_DOES_NOT_MATCH(6, "Entered password does not match the old one", HttpStatus.UNAUTHORIZED),
+    PASSWORD_DOES_NOT_MATCH(6, "Old password does not match", HttpStatus.UNAUTHORIZED),
     INCORRECT_ROLE_CHANGE(7, "Incorrect role change", HttpStatus.FORBIDDEN),
 
     BAD_REQUEST(8, "Bad request", HttpStatus.BAD_REQUEST),
-    NOT_FOUND(9, "Requested item not found", HttpStatus.NOT_FOUND),
+    NOT_FOUND(9, "Resource not found", HttpStatus.NOT_FOUND),
 
     BAD_CREDENTIALS(10, "Invalid login or password", HttpStatus.UNAUTHORIZED),
     USER_DOES_NOT_EXIST(11, "User does not exist", HttpStatus.UNAUTHORIZED),
@@ -29,7 +29,7 @@ public enum ErrapiErrorType {
     INVALID_TOKEN(13, "Invalid token", HttpStatus.UNAUTHORIZED),
     FORBIDDEN(14, "Insufficient permissions", HttpStatus.FORBIDDEN),
 
-    INCORRECT_TIME_BORDERS(15, "Incorrect time borders", HttpStatus.BAD_REQUEST),
+    INCORRECT_TIME_BORDERS(15, "Incorrect time range", HttpStatus.BAD_REQUEST),
     ;
 
     private final int id;
