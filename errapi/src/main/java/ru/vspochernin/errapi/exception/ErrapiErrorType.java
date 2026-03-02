@@ -23,13 +23,13 @@ public enum ErrapiErrorType {
     BAD_REQUEST(8, "Bad request", HttpStatus.BAD_REQUEST),
     NOT_FOUND(9, "Requested item not found", HttpStatus.NOT_FOUND),
 
-    BAD_CREDENTIALS(10, "User with such login or password not found", HttpStatus.UNAUTHORIZED),
+    BAD_CREDENTIALS(10, "Invalid login or password", HttpStatus.UNAUTHORIZED),
     USER_DOES_NOT_EXIST(11, "User does not exist", HttpStatus.UNAUTHORIZED),
     AUTH_REQUIRED(12, "Authentication required", HttpStatus.UNAUTHORIZED),
     INVALID_TOKEN(13, "Invalid token", HttpStatus.UNAUTHORIZED),
     FORBIDDEN(14, "Insufficient permissions", HttpStatus.FORBIDDEN),
 
-    INCORRECT_TIME_BORDERS(15, "Invalid time borders", HttpStatus.BAD_REQUEST),
+    INCORRECT_TIME_BORDERS(15, "Incorrect time borders", HttpStatus.BAD_REQUEST),
     ;
 
     private final int id;
