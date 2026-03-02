@@ -31,7 +31,7 @@ public class UserService {
     public UserDto changeRole(long targetUserId, UserRole newRole, AuthUserDetails actor) {
         long actorId = actor.getId();
         if (targetUserId == actorId) {
-            throw new ErrapiException(ErrapiErrorType.INCORRECT_ROLE_CHANGE, "Нельзя менять роль самому себе");
+            throw new ErrapiException(ErrapiErrorType.INCORRECT_ROLE_CHANGE, "Can't change own role");
         }
 
         UserRole actorRole = actor.getRole();

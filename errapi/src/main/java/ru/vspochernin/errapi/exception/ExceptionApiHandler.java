@@ -39,7 +39,7 @@ public class ExceptionApiHandler {
     public ResponseEntity<ErrorMessage> methodArgumentNotValidException(MethodArgumentNotValidException ex) {
         // По умолчанию (если не найдем ничего уточняющего).
         ErrapiErrorType errorType = ErrapiErrorType.BAD_REQUEST;
-        String additionalInfo = "Ошибка валидации полей";
+        String additionalInfo = "Field validation error";
 
         List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors();
         if (!fieldErrors.isEmpty()) {

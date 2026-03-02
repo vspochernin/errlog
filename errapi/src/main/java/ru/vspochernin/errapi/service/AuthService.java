@@ -57,7 +57,7 @@ public class AuthService {
             throw new ErrapiException(ErrapiErrorType.PASSWORD_DOES_NOT_MATCH);
         }
         if (request.oldPassword().equals(request.newPassword())) {
-            throw new ErrapiException(ErrapiErrorType.INVALID_PASSWORD, "Новый пароль совпадает со старым");
+            throw new ErrapiException(ErrapiErrorType.INVALID_PASSWORD, "New password matches the old one");
         }
 
         User user = userRepository.findById(actor.getId())
