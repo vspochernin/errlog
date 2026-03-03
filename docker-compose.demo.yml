@@ -49,7 +49,7 @@ services:
   vector:
     image: timberio/vector:0.53.0-debian
     volumes:
-      - ./docker/vector/vector-demo.yaml:/etc/vector/vector.yaml:ro # Перемещение конфигурации Vector в путь по-умолчанию.
+      - ./docker/vector/vector.yaml:/etc/vector/vector.yaml:ro # Перемещение конфигурации Vector в путь по-умолчанию.
       - /var/run/docker.sock:/var/run/docker.sock # Доступ к docker logs через сокет.
     environment:
       ERRLOG_KAFKA_BOOTSTRAP_SERVERS: "${ERRLOG_KAFKA_EXTERNAL_HOST}:9094" # Проброс из .env файла до Vector.
