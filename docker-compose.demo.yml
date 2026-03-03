@@ -54,6 +54,7 @@ services:
       ERRLOG_KAFKA_BOOTSTRAP_SERVERS: "${ERRLOG_KAFKA_BOOTSTRAP_SERVERS:-host.docker.internal:9094}"
       ERRLOG_KAFKA_TOPIC: "${ERRLOG_KAFKA_TOPIC:-errors-raw}"
     extra_hosts:
+      # Чтобы контейнер demo-контура мог обращаться к хосту по имени host.docker.internal.
       - "host.docker.internal:host-gateway"
     user: "0:0" # Нюансы докер групп. Гарантируем доступ Vector к сокету докера (запускаем от рута).
     restart: "unless-stopped"
