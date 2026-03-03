@@ -1,3 +1,4 @@
+name: errlog-core
 services:
   kafka:
     image: apache/kafka:4.1.1
