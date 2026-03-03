@@ -1,0 +1,59 @@
+services:
+  jerrgen-alpha:
+    build:
+      context: ./generators/jerrgen
+    deploy:
+      replicas: 3
+    labels:
+      errlog.collect: "true" # Лейбл для Vector (показывает, что с контейнеров этого сервиса нужно собирать логи).
+      errlog.source_type: "java-spring-logback" # Лейбл для Vector (с его помощью будет выбираться обработчик).
+      errlog.service_version: "${JERRGEN_VERSION:-1.2.345}" # Лейбл для Vector, имитирующий версию сервиса.
+    # Если нужно подключиться дебаггером.
+    #    environment:
+    #      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    #    ports:
+    #      - "5005:5005"
+    restart: "unless-stopped"
+  jerrgen-beta:
+    build:
+      context: ./generators/jerrgen
+    deploy:
+      replicas: 2
+    labels:
+      errlog.collect: "true" # Лейбл для Vector (показывает, что с контейнеров этого сервиса нужно собирать логи).
+      errlog.source_type: "java-spring-logback" # Лейбл для Vector (с его помощью будет выбираться обработчик).
+      errlog.service_version: "${JERRGEN_VERSION:-1.2.123}" # Лейбл для Vector, имитирующий версию сервиса.
+    # Если нужно подключиться дебаггером.
+    #    environment:
+    #      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    #    ports:
+    #      - "5005:5005"
+    restart: "unless-stopped"
+  jerrgen-gamma:
+    build:
+      context: ./generators/jerrgen
+    deploy:
+      replicas: 2
+    labels:
+      errlog.collect: "true" # Лейбл для Vector (показывает, что с контейнеров этого сервиса нужно собирать логи).
+      errlog.source_type: "java-spring-logback" # Лейбл для Vector (с его помощью будет выбираться обработчик).
+      errlog.service_version: "${JERRGEN_VERSION:-3.2.123}" # Лейбл для Vector, имитирующий версию сервиса.
+    # Если нужно подключиться дебаггером.
+    #    environment:
+    #      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    #    ports:
+    #      - "5005:5005"
+    restart: "unless-stopped"
+
+  vector:
+    image: timberio/vector:0.53.0-debian
+    volumes:
+      - ./docker/vector/vector-demo.yaml:/etc/vector/vector.yaml:ro # Перемещение конфигурации Vector в путь по-умолчанию.
+      - /var/run/docker.sock:/var/run/docker.sock # Доступ к docker logs через сокет.
+    environment:
+      ERRLOG_KAFKA_BOOTSTRAP_SERVERS: "${ERRLOG_KAFKA_BOOTSTRAP_SERVERS:-host.docker.internal:9094}"
+      ERRLOG_KAFKA_TOPIC: "${ERRLOG_KAFKA_TOPIC:-errors-raw}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    user: "0:0" # Нюансы докер групп. Гарантируем доступ Vector к сокету докера (запускаем от рута).
+    restart: "unless-stopped"
