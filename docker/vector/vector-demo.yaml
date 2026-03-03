@@ -68,6 +68,6 @@ sinks:
     type: kafka
     inputs: [ "only_errlog_json_warn_error" ] # Связываем нашу трансформацию с нашим кафка брокером.
     bootstrap_servers: "${ERRLOG_KAFKA_BOOTSTRAP_SERVERS}"
-    topic: "${ERRLOG_KAFKA_TOPIC}"
+    topic: "errors-raw"
     encoding:
       codec: json # Записывать будем в виде JSON.

@@ -52,8 +52,7 @@ services:
       - ./docker/vector/vector-demo.yaml:/etc/vector/vector.yaml:ro # Перемещение конфигурации Vector в путь по-умолчанию.
       - /var/run/docker.sock:/var/run/docker.sock # Доступ к docker logs через сокет.
     environment:
-      ERRLOG_KAFKA_BOOTSTRAP_SERVERS: "${ERRLOG_KAFKA_BOOTSTRAP_SERVERS:-host.docker.internal:9094}"
-      ERRLOG_KAFKA_TOPIC: "${ERRLOG_KAFKA_TOPIC:-errors-raw}"
+      ERRLOG_KAFKA_BOOTSTRAP_SERVERS: "${ERRLOG_KAFKA_EXTERNAL_HOST}:9094" # Проброс из .env файла до Vector.
     extra_hosts:
       # Чтобы контейнер demo-контура мог обращаться к хосту по имени host.docker.internal.
       - "host.docker.internal:host-gateway"
