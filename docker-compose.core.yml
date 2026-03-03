@@ -38,6 +38,8 @@ services:
       timeout: 5s
       retries: 30
       start_period: 10s
+    volumes:
+      - kafka_data:/var/lib/kafka/data
     restart: "unless-stopped"
 
   kafka-init:
@@ -155,5 +157,6 @@ services:
     restart: "unless-stopped"
 
 volumes:
-  postgres_data:
+  kafka_data:
   clickhouse_data:
+  postgres_data:
