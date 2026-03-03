@@ -53,7 +53,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock # Доступ к docker logs через сокет.
     environment:
       ERRLOG_KAFKA_BOOTSTRAP_SERVERS: "${ERRLOG_KAFKA_EXTERNAL_HOST}:9094" # Проброс из .env файла до Vector.
-    extra_hosts:
+    extra_hosts: # Требуется только для Linux, но не мешает остальным системам.
       # Чтобы контейнер demo-контура мог обращаться к хосту по имени host.docker.internal.
       - "host.docker.internal:host-gateway"
     user: "0:0" # Нюансы докер групп. Гарантируем доступ Vector к сокету докера (запускаем от рута).
