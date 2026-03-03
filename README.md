@@ -1,196 +1,240 @@
 # errlog
 
-Выпускная квалификационная работа «Сервис сбора и анализа ошибок информационных систем». 2-й семестр 2-го курса МИФИ.
-ИИКС РПО (2025-2026 уч. г).
+Выпускная квалификационная работа «Сервис сбора и анализа ошибок информационных систем». 2-й семестр 2-го курса МИФИ. ИИКС РПО (2025-2026 уч. г).
 
 ## Описание
 
 `errlog` - сервис для сбора и анализа ошибок информационных систем.
 
-В стенде есть:
+Проект разделен на 2 docker контура:
+- `errlog-core` - ядро системы: Kafka, Ingestor, ClickHouse, PostgreSQL, Errapi.
+  - Данный контур представляет собой непосредственно сервис сбора и анализа ошибок информационных систем.
+- `errlog-demo` - демонстрационный контур: генераторы ошибок и Vector.
+  - Данный контур нужен для демонстрации работы сервиса и представляет собой имитацию реальных микросервисов, генерирующих ошибки в процессе своей работы.
 
-- `jerrgen` - генератор логов в `stdout` (`JSON lines`)
-- `vector` - читает docker-логи контейнеров генераторов по label `errlog.collect=true`, оставляет `WARN/ERROR`, обогащает события и пишет их в Kafka
-- `kafka` + `kafka-init` - Kafka и одноразовое создание топика `errors-raw`
-- `clickhouse` + `clickhouse-init` - ClickHouse и инициализация БД `errlog_ch` с таблицей `error_events`
-- `ingestor` - читает `errors-raw`, нормализует события, вычисляет fingerprint и пишет данные в ClickHouse
-- `postgres` - хранение пользователей и ролей для `errapi`
-- `errapi` - REST API (JWT, роли, Swagger UI) для работы с пользователями и ошибками
+В дальнейшем совместная работа обоих контуров будет называться стендом. А под demo контуром может пониматься любая система микросервисов, генерирующая ошибки.
 
-## Пайплайн
+## Состав репозитория
 
-`Generators (stdout json)` -> `Vector` -> `Kafka (errors-raw)` -> `Ingestor` -> `ClickHouse (errlog_ch.error_events)`
+- `generators/jerrgen` - генератор WARN/ERROR логов, написанный на Java (Spring Boot Logback).
+- `ingestor` - Java Spring Boot сервис, читает Kafka и пишет нормализованные события в ClickHouse.
+- `errapi` - REST API с JWT и ролями для взаимодействия пользователей с сервисом.
+- `docker-compose.core.yml` - core контур.
+- `docker-compose.demo.yml` - demo контур.
+- `docker/vector/vector.yaml` - конфиг Vector.
+- `docker/clickhouse/init.sql` - SQL скрипт инициализации ClickHouse (создание базы и таблицы).
+- `docker/kafka/init.sh` - SQL скрипт инициализации Kafka (создание топика `errors-raw`).
 
-`Ingestor` делает `ack` только после успешной вставки в ClickHouse, поэтому семантика доставки - `at-least-once`.
+## Принцип работы стенда
 
-## Fingerprint
+1. Генераторы ошибок пишут логи в `stdout` в формате JSON lines.
+2. Vector в demo контуре читает docker-логи контейнеров с лейблом `errlog.collect=true`.
+3. Vector оставляет только WARN/ERROR события, добавляет метаданные и отправляет события в Kafka core контура.
+4. Ingestor читает Kafka, нормализует событие, вычисляет fingerprint и осуществляет запись в ClickHouse.
+5. Errapi осуществляет аутентификацию пользователя, читает данные из ClickHouse и предоставляет поиск и аналитику по ошибкам.
 
-Основа всегда начинается с: `service|logger|level`.
+`Ingestor` подтверждает Kafka offset только после успешной записи в ClickHouse, что обеспечивает семантику доставки сообщений at-least-once.
 
-- Если есть `stacktrace`: `service|logger|level|exceptionClass|stacktraceWithoutDigits` и `fingerprintSource=STACKTRACE`
-- Иначе если есть `messageTemplate`: `service|logger|level|messageTemplate` и `fingerprintSource=TEMPLATE`
-- Иначе: `service|logger|level` и `fingerprintSource=MINIMAL`
+## Вычисление fingerprint
 
-Хэш вычисляется в ClickHouse как `xxh3(fingerprintBase)` -> `UInt64`.
+Для группировки ошибок у каждого обрабатываемого события в Ingestor вычисляется fingerprint.
 
-## Быстрый старт
+Основа всегда начинается с:
+`service|logger|level`
 
-### 1. Поднять стенд
+Далее:
+- Если у события есть `stacktrace`: `service|logger|level|exceptionClass|stacktraceWithoutDigits`, `fingerprintSource=STACKTRACE`.
+- Иначе если есть `messageTemplate`: `service|logger|level|messageTemplate`, `fingerprintSource=TEMPLATE`.
+- Иначе: `service|logger|level`, `fingerprintSource=MINIMAL`.
 
-```bash
-docker compose up -d --build
+Хэш вычисляется в ClickHouse как `xxh3(fingerprintBase)` и хранится как `UInt64`.
+
+## Конфигурация
+
+В корне лежит `.env` - файл переменных окружения для Docker.
+
+Основной параметр сейчас один:
+```dotenv
+ERRLOG_KAFKA_EXTERNAL_HOST=host.docker.internal
 ```
 
-### 2. Проверить состояние контейнеров
+Если оба контура подняты на одной машине, этого достаточно для корректной работы.
 
-```bash
-docker compose ps -a
+Если core и demo находятся на разных машинах, значением данного параметра следует поставить IP или DNS машины, где поднят `errlog-core`. Например:
+```dotenv
+ERRLOG_KAFKA_EXTERNAL_HOST=192.168.1.50
 ```
 
-Ожидаемо:
+## Запуск
 
-- `kafka-init` и `clickhouse-init` завершены с `Exited (0)`
-- остальные сервисы находятся в состоянии `Up`
-
-## Проверка стенда
-
-### 1. Kafka
-
-Проверить, что в топик идут raw события:
+### 1. Поднять core контур
 
 ```bash
-docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh   --bootstrap-server kafka:9092   --topic errors-raw   --from-beginning
+docker compose -f docker-compose.core.yml up -d --build
 ```
 
-### 2. Ingestor
-
-Посмотреть логи вставок:
+### 2. Поднять demo контур
 
 ```bash
-docker compose logs -f ingestor
+docker compose -f docker-compose.demo.yml up -d --build
 ```
 
-### 3. ClickHouse
+## Вспомогательные скрипты
 
-Проверить доступность:
+В корне репозитория также представлены вспомогательные скрипты.
 
+- Перезапустить core контур:
+```bash
+./restart-core.sh
+```
+
+- Перезапустить demo контур:
+```bash
+./restart-demo.sh
+```
+
+- Перезапустить весь стенд:
+```bash
+./restart-stand.sh
+```
+
+- Остановить весь стенд:
+```bash
+./stop-stand.sh
+```
+
+Остановить весь стенд с удалением Docker volumes проекта:
+```bash
+./stop-stand-remove-volumes.sh
+```
+
+## Проверки после запуска
+
+### Core контур
+
+Статус контейнеров:
+```bash
+docker compose -f docker-compose.core.yml ps -a
+```
+
+Ожидается, что:
+- Сервисы `kafka-init` и `clickhouse-init` будут завершены с `Exited (0)`.
+- Остальны сервисы будет находиться в состоянии `Up`.
+
+Проверка ClickHouse:
 ```bash
 curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%201"
 ```
 
-Проверить количество событий:
+Здесь и далее `%20` - экранирование пробела в `HTTP` запросе.
 
+Ожидается вывод `1`.
+
+Количество событий:
 ```bash
 curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%20count()%20FROM%20errlog_ch.error_events"
 ```
 
-Посмотреть распределение по `fingerprint_source`:
+Ожидается вывод количества записанных событий (ненулевой, если уже поднят `demo` контур).
 
+Логи ingestor:
 ```bash
-curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%20fingerprint_source,%20count()%20c%20FROM%20errlog_ch.error_events%20GROUP%20BY%20fingerprint_source%20ORDER%20BY%20c%20DESC"
+docker logs -f errlog-core-ingestor-1
 ```
 
-Посмотреть топ повторяющихся `fingerprint`:
+Ожидается поток логов обработки событий (если уже поднят `demo` контур).
 
+### Demo контур
+
+Статус контейнеров:
 ```bash
-curl "http://localhost:8123/?user=errlog_ch_user&password=errlog_ch_password&query=SELECT%20fingerprint,%20count()%20c%20FROM%20errlog_ch.error_events%20GROUP%20BY%20fingerprint%20ORDER%20BY%20c%20DESC%20LIMIT%2020"
+docker compose -f docker-compose.demo.yml ps -a
+```
+Ожидается, что все сервисы будет находиться в состоянии `Up`.
+
+Логи Vector:
+```bash
+docker logs -f errlog-demo-vector-1
 ```
 
-### 4. Postgres
-
-Проверить доступность:
-
-```bash
-docker compose exec postgres psql -U errlog_pg_user -d errlog_pg -c "select 1;"
-```
+Ожидается успешное подключение к Kafka и начало обработки логов.
 
 ## Errapi
 
-### Swagger UI
+Swagger: http://localhost:8080/swagger-ui/index.html.
 
-```text
-http://localhost:8080/swagger-ui/index.html
-```
-
-### OWNER bootstrap
-
-OWNER пользователь создается при старте `errapi` из переменных окружения `ERRLOG_OWNER_*` в `docker-compose.yml`, если владельца еще нет в БД.
+Пользователь с ролью OWNER создается при старте `errapi` из переменных окружения `ERRLOG_OWNER_*` (см. `docker-compose.core.yml`), если такого пользователя еще нет в PostgreSQL.
 
 ### Получить JWT
 
 ```bash
-curl -X POST "http://localhost:8080/api/auth/login"   -H "Content-Type: application/json"   -d '{"login":"owner","password":"owner_password"}' | jq
+curl -X POST "http://localhost:8080/api/auth/login"   -H "Content-Type: application/json"   -d '{"login":"owner","password":"owner_password"}'
 ```
 
-Чтобы не вставлять токен в каждый запрос вручную:
-
+Для удобства можно добавить полученный токен в переменную окружения:
 ```bash
 export ERRLOG_OWNER_JWT="<token>"
 ```
 
-Проверка авторизации:
-
+Проверка корректности токена:
 ```bash
-curl -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   "http://localhost:8080/api/users" | jq
+curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   "http://localhost:8080/api/users"
 ```
+
+Ожидается вывод информации о зарегистрированных пользователях.
 
 ## Errors API
 
-### 1. Allowlist фильтров
+### Allowlist фильтров
 
 ```bash
 curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   "http://localhost:8080/api/errors/filters" | jq
 ```
 
-### 2. Список событий
+### Список событий
 
-По умолчанию вернет события за последние 24 часа.  
-`stacktrace` в этом списке не возвращается.
-
+По умолчанию возвращаются события за последние 24 часа.
 ```bash
 curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: application/json"   -X POST "http://localhost:8080/api/errors/events?limit=10&offset=0"   -d '{}' | jq
 ```
 
-С явными границами времени:
-
+Пример с границами времени:
 ```bash
-curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: application/json"   -X POST "http://localhost:8080/api/errors/events?limit=20&offset=0"   -d '{"from":"2026-02-24T00:00:00Z","to":"2026-02-25T00:00:00Z"}' | jq
+curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: application/json"   -X POST "http://localhost:8080/api/errors/events?limit=20&offset=0"   -d '{"from":"2026-02-24T00:00:00Z","to":"2027-02-25T00:00:00Z"}' | jq
 ```
 
 Пример с фильтрами:
-
 ```bash
 curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: application/json"   -X POST "http://localhost:8080/api/errors/events?limit=20&offset=0"   -d '{"filters":[{"field":"service","operation":"eq","values":["jerrgen-alpha"]},{"field":"level","operation":"in","values":["ERROR"]}]}' | jq
 ```
 
-### 3. Детальная информация по событию
+### Детальная информация по событию
 
 ```bash
 curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   "http://localhost:8080/api/errors/events/<eventId>" | jq
 ```
 
-### 4. Группы ошибок
+### Группы ошибок
 
 ```bash
 curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: application/json"   -X POST "http://localhost:8080/api/errors/groups?limit=10&offset=0"   -d '{}' | jq
 ```
 
-### 5. Timeseries
+### Timeseries
 
-Автоматический выбор бакета:
-
+Автоматический выбор размера бакета:
 ```bash
 curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: application/json"   -X POST "http://localhost:8080/api/errors/timeseries"   -d '{}' | jq
 ```
 
-Явный бакет:
-
+Ручной выбор размера бакета:
 ```bash
-curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: application/json"   -X POST "http://localhost:8080/api/errors/timeseries?bucket=15m"   -d '{}' | jq
+curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: application/json"   -X POST "http://localhost:8080/api/errors/timeseries?bucket=1m"   -d '{}' | jq
 ```
 
 ## Пагинация событий
 
-При `offset`-пагинации на живом потоке новые события могут вклиниваться между страницами.
+- Список событий сортируется по `timestamp DESC, event_id DESC`.
+- Список групп событий сортируется по `group_count DESC, group_last_seen DESC, group_fingerprint DESC`.
 
-Если нужен стабильный просмотр списка, клиент может зафиксировать `to` на момент первого запроса и потом переиспользовать его при запросе следующих страниц, меняя только `offset`.
+Если поток живой и в систему продолжают приходить новые события, для стабильной offset-пагинации следует зафиксировать `to` на момент первого запроса и переиспользовать его на следующих страницах, меняя только `offset`.
