@@ -30,6 +30,9 @@ services:
 
       # Отключаем автоматическое создание топика (будем создавать вручную).
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+
+      # Для персистентности Kafka.
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
     ports:
       - "9094:9094" # Внешний слушатель для внешних клиентов.
     healthcheck: # Чтобы запускать vector и kafka-init только после успешного запуска kafka.
@@ -63,6 +66,7 @@ services:
       - "8123:8123" # Порт для HTTP запросов.
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
     healthcheck: # Чтобы запускать ingestor и clickhouse-init только после успешного старта clickhouse.
       test: [ "CMD-SHELL", "clickhouse-client --host localhost --user errlog_ch_user --password errlog_ch_password --query 'SELECT 1' >/dev/null 2>&1" ]
       interval: 5s
@@ -159,4 +163,5 @@ services:
 volumes:
   kafka_data:
   clickhouse_data:
+  clickhouse_logs:
   postgres_data:
