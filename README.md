@@ -23,7 +23,7 @@
 - `docker-compose.demo.yml` - demo контур.
 - `docker/vector/vector.yaml` - конфиг Vector.
 - `docker/clickhouse/init.sql` - SQL скрипт инициализации ClickHouse (создание базы и таблицы).
-- `docker/kafka/init.sh` - SQL скрипт инициализации Kafka (создание топика `errors-raw`).
+- `docker/kafka/init.sh` - скрипт инициализации Kafka (создание топика `errors-raw`).
 
 ## Принцип работы стенда
 
@@ -234,7 +234,7 @@ curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: appl
 
 ## Пагинация событий
 
-- Список событий сортируется по `timestamp DESC, event_id DESC`.
-- Список групп событий сортируется по `group_count DESC, group_last_seen DESC, group_fingerprint DESC`.
+- Список событий сортируется по `timestamp DESC, eventId DESC`.
+- Список групп событий сортируется по `groupCount DESC, groupLastSeen DESC, groupFingerprint DESC`.
 
 Если поток живой и в систему продолжают приходить новые события, для стабильной offset-пагинации следует зафиксировать `to` на момент первого запроса и переиспользовать его на следующих страницах, меняя только `offset`.
