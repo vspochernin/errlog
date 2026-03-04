@@ -1,61 +1,22 @@
+name: errlog-core
 services:
-  jerrgen-alpha:
-    build:
-      context: ./generators/jerrgen
-    deploy:
-      replicas: 3
-    labels:
-      errlog.collect: "true" # Лейбл для Vector (показывает, что с контейнеров этого сервиса нужно собирать логи).
-      errlog.source_type: "java-spring-logback" # Лейбл для Vector (с его помощью будет выбираться обработчик).
-      errlog.service_version: "${JERRGEN_VERSION:-1.2.345}" # Лейбл для Vector, имитирующий версию сервиса.
-    # Если нужно подключиться дебаггером.
-    #    environment:
-    #      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
-    #    ports:
-    #      - "5005:5005"
-    restart: "unless-stopped"
-  jerrgen-beta:
-    build:
-      context: ./generators/jerrgen
-    deploy:
-      replicas: 2
-    labels:
-      errlog.collect: "true" # Лейбл для Vector (показывает, что с контейнеров этого сервиса нужно собирать логи).
-      errlog.source_type: "java-spring-logback" # Лейбл для Vector (с его помощью будет выбираться обработчик).
-      errlog.service_version: "${JERRGEN_VERSION:-1.2.123}" # Лейбл для Vector, имитирующий версию сервиса.
-    # Если нужно подключиться дебаггером.
-    #    environment:
-    #      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
-    #    ports:
-    #      - "5005:5005"
-    restart: "unless-stopped"
-  jerrgen-gamma:
-    build:
-      context: ./generators/jerrgen
-    deploy:
-      replicas: 2
-    labels:
-      errlog.collect: "true" # Лейбл для Vector (показывает, что с контейнеров этого сервиса нужно собирать логи).
-      errlog.source_type: "java-spring-logback" # Лейбл для Vector (с его помощью будет выбираться обработчик).
-      errlog.service_version: "${JERRGEN_VERSION:-3.2.123}" # Лейбл для Vector, имитирующий версию сервиса.
-    # Если нужно подключиться дебаггером.
-    #    environment:
-    #      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
-    #    ports:
-    #      - "5005:5005"
-    restart: "unless-stopped"
-
   kafka:
     image: apache/kafka:4.1.1
     environment:
       # Настройка KRaft (без ZooKeeper).
       KAFKA_NODE_ID: "1" # С одной нодой.
       KAFKA_PROCESS_ROLES: "broker,controller" # Нода и брокер, и контроллер.
-      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093" # Слушатели для клиентов и внутреннего кворума.
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092" # Как нода будет объявлять себя клиентам.
+
+      # Два слушателя.
+      # INTERNAL - для контейнеров внутри errlog-core.
+      # EXTERNAL - для клиентов вне core-контура (например, demo-контура или внешних сервисов).
+      KAFKA_LISTENERS: "INTERNAL://:9092,EXTERNAL://:9094,CONTROLLER://:9093" # Слушатели.
+      # Как нода будет объявлять себя клиентам (внутренним и внешним).
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka:9092,EXTERNAL://${ERRLOG_KAFKA_EXTERNAL_HOST}:9094"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL" # Имя слушателя для внутренней коммуникации между брокерами.
       KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER" # Какой слушатель используется для роли controller.
       # Сопоставление имен слушателей с протоколами безопасности.
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
       KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093" # Описание кворума контроллеров.
 
       # Настройки кластера, чтобы не было ошибок с репликацией в single-node.
@@ -69,12 +30,19 @@ services:
 
       # Отключаем автоматическое создание топика (будем создавать вручную).
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+
+      # Для персистентности Kafka.
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+    ports:
+      - "9094:9094" # Внешний слушатель для внешних клиентов.
     healthcheck: # Чтобы запускать vector и kafka-init только после успешного запуска kafka.
       test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1" ]
       interval: 5s
       timeout: 5s
       retries: 30
       start_period: 10s
+    volumes:
+      - kafka_data:/var/lib/kafka/data
     restart: "unless-stopped"
 
   kafka-init:
@@ -88,19 +56,6 @@ services:
       - ./docker/kafka/init.sh:/init/init.sh:ro
     restart: "no"
 
-  vector:
-    image: timberio/vector:0.53.0-debian
-    depends_on: # Запускаем только после успешного старта и инициализации Kafka.
-      kafka:
-        condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
-    volumes:
-      - ./docker/vector/vector.yaml:/etc/vector/vector.yaml:ro # Перемещение конфигурации Vector в путь по-умолчанию.
-      - /var/run/docker.sock:/var/run/docker.sock # Доступ к docker logs через сокет.
-    user: "0:0" # Нюансы докер групп. Гарантируем доступ Vector к сокету докера (запускаем от рута).
-    restart: "unless-stopped"
-
   clickhouse:
     image: clickhouse/clickhouse-server:26.1
     environment:
@@ -111,6 +66,7 @@ services:
       - "8123:8123" # Порт для HTTP запросов.
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
     healthcheck: # Чтобы запускать ingestor и clickhouse-init только после успешного старта clickhouse.
       test: [ "CMD-SHELL", "clickhouse-client --host localhost --user errlog_ch_user --password errlog_ch_password --query 'SELECT 1' >/dev/null 2>&1" ]
       interval: 5s
@@ -205,5 +161,7 @@ services:
     restart: "unless-stopped"
 
 volumes:
-  postgres_data:
+  kafka_data:
   clickhouse_data:
+  clickhouse_logs:
+  postgres_data:

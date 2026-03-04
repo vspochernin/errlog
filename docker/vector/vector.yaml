@@ -2,8 +2,8 @@
 sources:
   docker:
     type: docker_logs
-    # Vector читает все контейнеры нашего стенда, но мы хотим читать только генераторы ошибок.
-    # Поэтому фильтруем контейнеры на наличие специального лейбла.
+    # Наш Vector читает контейнеры demo-контура, но собирать логи нужно только с контейнеров-генераторов ошибок.
+    # Поэтому проверяем контейнеры на наличие специального лейбла.
     include_labels:
       - "errlog.collect=true"
 
@@ -67,7 +67,7 @@ sinks:
   kafka:
     type: kafka
     inputs: [ "only_errlog_json_warn_error" ] # Связываем нашу трансформацию с нашим кафка брокером.
-    bootstrap_servers: "kafka:9092"
+    bootstrap_servers: "${ERRLOG_KAFKA_BOOTSTRAP_SERVERS}"
     topic: "errors-raw"
     encoding:
       codec: json # Записывать будем в виде JSON.
