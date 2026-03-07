@@ -35,6 +35,64 @@
 
 `Ingestor` подтверждает Kafka offset только после успешной записи в ClickHouse, что обеспечивает семантику доставки сообщений at-least-once.
 
+## Как подключить новый источник ошибок
+
+В MVP "из коробки" поддерживается формат `java-spring-logback` - JSON строки Java Spring Logback логов с выводом шаблона сообщения (demo контур).
+Чтобы подключить любой другой источник (Python, Go, и т.п.), необходимо сделать две вещи:
+
+### 1) Доставить события в Kafka core контура
+
+- Core контур принимает входные события из Kafka топика `errors-raw`.
+- Для внешних источников необходимо использовать внешний Kafka listener core контура: `${ERRLOG_KAFKA_EXTERNAL_HOST}:9094` (см. `.env`).
+- Сообщение в Kafka должно быть в формате JSON (одна запись на одно сообщение) и содержать поле `sourceType` на верхнем уровне.
+- Минимальный пример JSON (поля можно расширять, но `sourceType` обязателен):
+
+```json
+{
+  "sourceType": "my-app-source-type",
+  "timestamp": 1770000000000,
+  "service": "billing",
+  "level": "ERROR",
+  "message": "Something failed"
+}
+```
+
+Способ доставки сообщений в core контур допускается делать произвольным, однако предлагается использовать Vector как удобный инструмент.
+Пример настройки в Vector можно найти в demo контуре.
+
+Важно: если `sourceType` неизвестен Ingestor, событие будет пропущено.
+
+### 2) Научить Ingestor обрабатывать новый `sourceType`
+
+Ingestor выбирает нормализатор по полю `sourceType` и преобразует raw JSON в каноническую модель `NormalizedErrorEvent`.
+
+Чтобы добавить новый формат, необходимо:
+1. Создать класс, реализующий `RawEventNormalizer`.
+2. Вернуть нужный `sourceType()` (строго то же значение, что в JSON-сообщениях).
+3. В `normalize(JsonNode rawEvent)` распарсить поля и вернуть `NormalizedErrorEvent`.
+4. Пометить класс `@Component`, чтобы он автоматически попал в `RawEventNormalizerRegistry`.
+
+Скелет:
+
+```java
+@Component
+public class MyAppRawEventNormalizer implements RawEventNormalizer {
+
+    @Override
+    public String sourceType() {
+        return "my-app-source-type";
+    }
+
+    @Override
+    public Optional<NormalizedErrorEvent> normalize(JsonNode rawEvent) {
+        // Распарсить timestamp/service/level/message и опциональные поля.
+        // Вернуть new NormalizedErrorEvent(...).
+    }
+}
+```
+
+После этого любые сообщения с `sourceType = "my-app-source-type"` начнут приниматься и обрабатываться.
+
 ## Вычисление fingerprint
 
 Для группировки ошибок у каждого обрабатываемого события в Ingestor вычисляется fingerprint.
@@ -48,6 +106,8 @@
 - Иначе: `service|logger|level`, `fingerprintSource=MINIMAL`.
 
 Хэш вычисляется в ClickHouse как `xxh3(fingerprintBase)` и хранится как `UInt64`.
+
+Так как `logger` является опциональным полем, то в случае его отсутствия при вычислении fingerprint будет использоваться пустая строка.
 
 ## Конфигурация
 
