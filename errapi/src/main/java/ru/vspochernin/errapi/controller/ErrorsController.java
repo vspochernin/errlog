@@ -145,7 +145,7 @@ public class ErrorsController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Успешный ответ",
                     content = @Content(schema = @Schema(implementation = ErrorsGroupsResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Ошиюка запроса",
+            @ApiResponse(responseCode = "400", description = "Ошибка запроса",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "401", description = "Ошибка аутентификации",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
