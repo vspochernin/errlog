@@ -269,7 +269,7 @@ curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: appl
 
 Пример с фильтрами:
 ```bash
-curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: application/json"   -X POST "http://localhost:8080/api/errors/events?limit=20&offset=0"   -d '{"filters":[{"field":"service","operation":"eq","values":["jerrgen-alpha"]},{"field":"level","operation":"in","values":["ERROR"]}]}' | jq
+curl -sS   -H "Authorization: Bearer $ERRLOG_OWNER_JWT"   -H "Content-Type: application/json"   -X POST "http://localhost:8080/api/errors/events?limit=20&offset=0"   -d '{"filters":[{"field":"service","operation":"in","values":["jerrgen-alpha","jerrgen-gamma"]},{"field":"level","operation":"eq","values":["ERROR"]}]}' | jq
 ```
 
 ### Детальная информация по событию
