@@ -2,6 +2,8 @@ package ru.vspochernin.errapi.config;
 
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +16,29 @@ import org.springframework.context.annotation.Configuration;
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
         bearerFormat = "JWT")
-public class OpenApiConfig { // Для появления в Swagger UI кнопки "Authorize" и удобной аутентификации в Swagger.
+public class OpenApiConfig {
+
+    @Bean
+    public OpenAPI errlogOpenApi() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Errlog API")
+                        .version("1.0")
+                        .description("""
+                                REST API сервиса сбора и анализа ошибок информационных систем Errlog.
+                                
+                                Возможности текущей версии API:
+                                - Регистрация и аутентификация пользователей.
+                                - Управление ролями пользователей.
+                                - Получение списка возможных для фильтрации полей и операций.
+                                - Получение списка групп событий (с возможностью фильтрации).
+                                - Получение списка событий (с возможностью фильтрации).
+                                - Получение подробной информации о конкретном событии.
+                                - Получение временного ряда количества событий ошибок (c возможностью фильтрации).
+                                
+                                Для защищенных эндпоинтов используется JWT Bearer token.
+                                """));
+    }
 
     // Чтобы Swagger начал прикреплять токен к запросам.
     @Bean
