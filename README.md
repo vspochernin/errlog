@@ -100,10 +100,14 @@ public class MyAppRawEventNormalizer implements RawEventNormalizer {
 Основа всегда начинается с:
 `service|logger|level`
 
-Далее:
-- Если у события есть `stacktrace`: `service|logger|level|exceptionClass|stacktraceWithoutDigits`, `fingerprintSource=STACKTRACE`.
-- Иначе если есть `messageTemplate`: `service|logger|level|messageTemplate`, `fingerprintSource=TEMPLATE`.
+Далее используется один из следующих вариантов:
+
+- Если у события есть `stacktrace`: `service|logger|level|stacktraceWithoutDigits`, `fingerprintSource=STACKTRACE`.
+- Иначе если у события одновременно есть `exceptionClass` и `exceptionMessage`: `service|logger|level|exceptionClass|exceptionMessage`, `fingerprintSource=EXCEPTION`.
+- Иначе если у события есть `messageTemplate`: `service|logger|level|messageTemplate`, `fingerprintSource=MESSAGE_TEMPLATE`.
 - Иначе: `service|logger|level`, `fingerprintSource=MINIMAL`.
+
+Для уменьшения влияния шума из `stacktrace` перед вычислением fingerprint удаляются все цифры.
 
 Хэш вычисляется в ClickHouse как `xxh3(fingerprintBase)` и хранится как `UInt64`.
 

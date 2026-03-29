@@ -3,6 +3,7 @@ package ru.vspochernin.ingestor.fingerprint;
 public enum FingerprintSource {
 
     STACKTRACE,
-    TEMPLATE,
+    EXCEPTION,
+    MESSAGE_TEMPLATE,
     MINIMAL
 }

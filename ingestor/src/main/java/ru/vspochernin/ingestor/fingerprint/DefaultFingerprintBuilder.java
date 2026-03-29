@@ -21,14 +21,15 @@ public class DefaultFingerprintBuilder implements FingerprintBuilder {
         FingerprintSource source;
 
         if (StringUtils.isNotBlank(event.stacktrace())) {
-            String exceptionClass = StringUtils.getOrDefault(event.exceptionClass(), "");
             String stacktraceNoDigits = DIGITS.matcher(event.stacktrace()).replaceAll("");
-
-            base = String.join("|", service, logger, level, exceptionClass, stacktraceNoDigits);
+            base = String.join("|", service, logger, level, stacktraceNoDigits);
             source = FingerprintSource.STACKTRACE;
+        } else if (StringUtils.isNotBlank(event.exceptionClass()) && StringUtils.isNotBlank(event.exceptionMessage())) {
+            base = String.join("|", service, logger, level, event.exceptionClass(), event.exceptionMessage());
+            source = FingerprintSource.EXCEPTION;
         } else if (StringUtils.isNotBlank(event.messageTemplate())) {
             base = String.join("|", service, logger, level, event.messageTemplate());
-            source = FingerprintSource.TEMPLATE;
+            source = FingerprintSource.MESSAGE_TEMPLATE;
         } else {
             base = String.join("|", service, logger, level);
             source = FingerprintSource.MINIMAL;
