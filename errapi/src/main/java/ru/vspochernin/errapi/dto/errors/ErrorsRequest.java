@@ -23,7 +23,7 @@ public record ErrorsRequest(
 
         @Schema(
                 description = "Fingerprint группы ошибок в десятичном строковом представлении UInt64",
-                example = " ",
+                example = "6968451703662559529",
                 nullable = true)
         String fingerprint,
 
