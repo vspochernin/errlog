@@ -25,18 +25,18 @@ import ru.vspochernin.errapi.service.AuthService;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@Tag(name = "Auth", description = "Регистрация, аутентификация и смена пароля")
+@Tag(name = "Auth", description = "Регистрация, аутентификация и смена пароля пользователя")
 public class AuthController {
 
     private final AuthService authService;
 
     @Operation(
-            summary = "Регистрация пользователя",
+            summary = "Регистрация нового пользователя",
             description = "Создает нового пользователя с ролью NONE")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Пользователь успешно зарегистрирован",
+            @ApiResponse(responseCode = "201", description = "Успешная регистрация нового пользователя",
                     content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "400", description = "Ошибка валидации или конфликт уникальности",
+            @ApiResponse(responseCode = "400", description = "Ошибка валидации запроса",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @PostMapping("/register")
@@ -44,7 +44,7 @@ public class AuthController {
             @Valid
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
-                    description = "Данные нового пользователя",
+                    description = "Учетные данные нового пользователя",
                     content = @Content(
                             schema = @Schema(implementation = RegisterRequest.class),
                             examples = @ExampleObject(
@@ -64,10 +64,10 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Аутентификация пользователя",
+            summary = "Аутентификация",
             description = "Возвращает JWT токен для дальнейшей работы с защищенными эндпоинтами")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Аутентификация выполнена",
+            @ApiResponse(responseCode = "200", description = "Успешная аутентификация",
                     content = @Content(schema = @Schema(implementation = LoginResponse.class))),
             @ApiResponse(responseCode = "400", description = "Ошибка валидации запроса",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
@@ -101,10 +101,10 @@ public class AuthController {
             summary = "Смена пароля",
             description = "Требует валидный JWT токен аутентифицированного пользователя")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Пароль успешно изменен"),
+            @ApiResponse(responseCode = "204", description = "Успешное изменение пароля"),
             @ApiResponse(responseCode = "400", description = "Ошибка валидации запроса",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Пользователь не аутентифицирован или старый пароль не подходит",
+            @ApiResponse(responseCode = "401", description = "Ошибка аутентификации или несоответствие паролей",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @PutMapping("/password")
