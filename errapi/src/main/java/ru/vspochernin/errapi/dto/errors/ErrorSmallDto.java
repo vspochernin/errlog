@@ -5,7 +5,7 @@ import java.time.Instant;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ru.vspochernin.errapi.model.errors.ErrorEventRow;
 
-@Schema(description = "Краткая информация о событии ошибки")
+@Schema(description = "Общая информация о событии ошибки")
 public record ErrorSmallDto(
 
         @Schema(description = "Идентификатор события UUID", example = "9eefb744-0afb-49c1-93d1-ebb31aedcb5e")
