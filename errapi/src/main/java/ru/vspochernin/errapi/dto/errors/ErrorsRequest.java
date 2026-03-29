@@ -23,7 +23,7 @@ public record ErrorsRequest(
 
         @Schema(
                 description = "Fingerprint группы ошибок в десятичном строковом представлении UInt64",
-                example = "",
+                example = " ",
                 nullable = true)
         String fingerprint,
 
@@ -37,7 +37,7 @@ public record ErrorsRequest(
         return new ErrorsRequest(null, null, null, List.of());
     }
 
-    @Schema(description = "Один фильтр запроса")
+    @Schema(description = "Конкретный фильтр запроса")
     public record Filter(
 
             @Schema(description = "Имя поля фильтра", example = "service")
