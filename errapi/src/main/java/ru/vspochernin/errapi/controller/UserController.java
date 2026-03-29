@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,7 +34,7 @@ public class UserController {
     @Operation(summary = "Получить список пользователей")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Список пользователей получен",
-                    content = @Content(schema = @Schema(implementation = UserDto.class))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserDto.class)))),
             @ApiResponse(responseCode = "401", description = "Требуется аутентификация",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "403", description = "Недостаточно прав",
@@ -74,6 +75,8 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Роль успешно изменена",
                     content = @Content(schema = @Schema(implementation = UserDto.class))),
             @ApiResponse(responseCode = "400", description = "Некорректный параметр role",
+                    content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "403", description = "Недостаточно прав для смены роли",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),

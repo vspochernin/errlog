@@ -34,7 +34,7 @@ public class ErrorsController {
     private final ErrorsService errorsService;
 
     @Operation(
-            summary = "Получить список поддерживаемых полей операций для фильтрации",
+            summary = "Получить список поддерживаемых полей и операций фильтрации",
             description = "Возвращает список поддерживаемых полей и операций для filters в ErrorsRequest")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Список фильтров получен",
@@ -54,7 +54,7 @@ public class ErrorsController {
 
     @Operation(
             summary = "Получить список событий ошибок",
-            description = "Возвращает страницу событий ошибок. Тело запроса задает базовые параметры выборки, а limit/offset - параметры пагинации")
+            description = "Возвращает страницу событий ошибок. Тело запроса задает базовые параметры выборки, а limit и offset - параметры пагинации")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Список событий получен",
                     content = @Content(schema = @Schema(implementation = ErrorsEventsResponse.class))),
@@ -68,7 +68,7 @@ public class ErrorsController {
     @PostMapping("/events")
     public ResponseEntity<ErrorsEventsResponse> events(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Общий запрос для фильтрации",
+                    description = "Базовые параметры выборки",
                     content = @Content(
                             schema = @Schema(implementation = ErrorsRequest.class),
                             examples = @ExampleObject(
@@ -145,7 +145,7 @@ public class ErrorsController {
     @PostMapping("/groups")
     public ResponseEntity<ErrorsGroupsResponse> groups(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Общий запрос для фильтрации",
+                    description = "Базовые параметры выборки",
                     content = @Content(
                             schema = @Schema(implementation = ErrorsRequest.class),
                             examples = @ExampleObject(
@@ -196,7 +196,7 @@ public class ErrorsController {
     @PostMapping("/timeseries")
     public ResponseEntity<ErrorsTimeseriesResponse> timeseries(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Общий запрос для фильтрации",
+                    description = "Базовые параметры выборки",
                     content = @Content(
                             schema = @Schema(implementation = ErrorsRequest.class),
                             examples = @ExampleObject(

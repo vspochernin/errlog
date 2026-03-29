@@ -25,7 +25,7 @@ import ru.vspochernin.errapi.service.AuthService;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@Tag(name = "Auth", description = "Регистрация, аутентификация и изменение данных")
+@Tag(name = "Auth", description = "Регистрация, аутентификация и смена пароля")
 public class AuthController {
 
     private final AuthService authService;
