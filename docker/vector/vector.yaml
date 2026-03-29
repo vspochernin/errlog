@@ -9,7 +9,7 @@ sources:
 
 # Определение трансформаций.
 transforms:
-  only_errlog_json_warn_error:
+  only_errlog_json_warn_error_fatal:
     type: remap
     inputs: [ "docker" ] # Связываем наш источник с нашей трансформацией.
     source: |
@@ -51,9 +51,9 @@ transforms:
       lvl, err = to_string(.level)
       if err != null { abort }
 
-      # Оставляем только WARN и ERROR сообщения.
+      # Оставляем только WARN, ERROR и FATAL сообщения.
       lvl = upcase(lvl)
-      if lvl != "WARN" && lvl != "ERROR" { abort }
+      if lvl != "WARN" && lvl != "ERROR" && lvl != "FATAL" { abort }
       .level = lvl
 
       # Обогащаем событие метаданными контейнера.
@@ -66,7 +66,7 @@ transforms:
 sinks:
   kafka:
     type: kafka
-    inputs: [ "only_errlog_json_warn_error" ] # Связываем нашу трансформацию с нашим кафка брокером.
+    inputs: [ "only_errlog_json_warn_error_fatal" ] # Связываем нашу трансформацию с нашим кафка брокером.
     bootstrap_servers: "${ERRLOG_KAFKA_BOOTSTRAP_SERVERS}"
     topic: "errors-raw"
     encoding:

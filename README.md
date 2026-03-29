@@ -29,11 +29,69 @@
 
 1. Генераторы ошибок пишут логи в `stdout` в формате JSON lines.
 2. Vector в demo контуре читает docker-логи контейнеров с лейблом `errlog.collect=true`.
-3. Vector оставляет только WARN/ERROR события, добавляет метаданные и отправляет события в Kafka core контура.
+3. Vector оставляет только WARN/ERROR/FATAL события, добавляет метаданные и отправляет события в Kafka core контура.
 4. Ingestor читает Kafka, нормализует событие, вычисляет fingerprint и осуществляет запись в ClickHouse.
 5. Errapi осуществляет аутентификацию пользователя, читает данные из ClickHouse и предоставляет поиск и аналитику по ошибкам.
 
 `Ingestor` подтверждает Kafka offset только после успешной записи в ClickHouse, что обеспечивает семантику доставки сообщений at-least-once.
+
+## Как подключить новый источник ошибок
+
+В MVP "из коробки" поддерживается формат `java-spring-logback` - JSON строки Java Spring Logback логов с выводом шаблона сообщения (demo контур).
+Чтобы подключить любой другой источник (Python, Go, и т.п.), необходимо сделать две вещи:
+
+### 1) Доставить события в Kafka core контура
+
+- Core контур принимает входные события из Kafka топика `errors-raw`.
+- Для внешних источников необходимо использовать внешний Kafka listener core контура: `${ERRLOG_KAFKA_EXTERNAL_HOST}:9094` (см. `.env`).
+- Сообщение в Kafka должно быть в формате JSON (одна запись на одно сообщение) и содержать поле `sourceType` на верхнем уровне.
+- Минимальный пример JSON (поля можно расширять, но `sourceType` обязателен):
+
+```json
+{
+  "sourceType": "my-app-source-type",
+  "timestamp": 1770000000000,
+  "service": "billing",
+  "level": "ERROR",
+  "message": "Something failed"
+}
+```
+
+Способ доставки сообщений в core контур допускается делать произвольным, однако предлагается использовать Vector как удобный инструмент.
+Пример настройки в Vector можно найти в demo контуре.
+
+Важно: если `sourceType` неизвестен Ingestor, событие будет пропущено.
+
+### 2) Научить Ingestor обрабатывать новый `sourceType`
+
+Ingestor выбирает нормализатор по полю `sourceType` и преобразует raw JSON в каноническую модель `NormalizedErrorEvent`.
+
+Чтобы добавить новый формат, необходимо:
+1. Создать класс, реализующий `RawEventNormalizer`.
+2. Вернуть нужный `sourceType()` (строго то же значение, что в JSON-сообщениях).
+3. В `normalize(JsonNode rawEvent)` распарсить поля и вернуть `NormalizedErrorEvent`.
+4. Пометить класс `@Component`, чтобы он автоматически попал в `RawEventNormalizerRegistry`.
+
+Скелет:
+
+```java
+@Component
+public class MyAppRawEventNormalizer implements RawEventNormalizer {
+
+    @Override
+    public String sourceType() {
+        return "my-app-source-type";
+    }
+
+    @Override
+    public Optional<NormalizedErrorEvent> normalize(JsonNode rawEvent) {
+        // Распарсить timestamp/service/level/message и опциональные поля.
+        // Вернуть new NormalizedErrorEvent(...).
+    }
+}
+```
+
+После этого любые сообщения с `sourceType = "my-app-source-type"` начнут приниматься и обрабатываться.
 
 ## Вычисление fingerprint
 
@@ -42,12 +100,18 @@
 Основа всегда начинается с:
 `service|logger|level`
 
-Далее:
-- Если у события есть `stacktrace`: `service|logger|level|exceptionClass|stacktraceWithoutDigits`, `fingerprintSource=STACKTRACE`.
-- Иначе если есть `messageTemplate`: `service|logger|level|messageTemplate`, `fingerprintSource=TEMPLATE`.
+Далее используется один из следующих вариантов:
+
+- Если у события есть `stacktrace`: `service|logger|level|stacktraceWithoutDigits`, `fingerprintSource=STACKTRACE`.
+- Иначе если у события одновременно есть `exceptionClass` и `exceptionMessage`: `service|logger|level|exceptionClass|exceptionMessage`, `fingerprintSource=EXCEPTION`.
+- Иначе если у события есть `messageTemplate`: `service|logger|level|messageTemplate`, `fingerprintSource=MESSAGE_TEMPLATE`.
 - Иначе: `service|logger|level`, `fingerprintSource=MINIMAL`.
 
+Для уменьшения влияния шума из `stacktrace` перед вычислением fingerprint удаляются все цифры.
+
 Хэш вычисляется в ClickHouse как `xxh3(fingerprintBase)` и хранится как `UInt64`.
+
+Так как `logger` является опциональным полем, то в случае его отсутствия при вычислении fingerprint будет использоваться пустая строка.
 
 ## Конфигурация
 
