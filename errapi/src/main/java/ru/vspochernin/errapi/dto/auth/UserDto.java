@@ -7,16 +7,16 @@ import ru.vspochernin.errapi.model.auth.UserRole;
 @Schema(description = "Пользователь сервиса")
 public record UserDto(
 
-        @Schema(description = "Идентификатор пользователя", example = "1")
+        @Schema(description = "Идентификатор", example = "1")
         long id,
 
-        @Schema(description = "Логин пользователя", example = "owner")
+        @Schema(description = "Логин", example = "owner")
         String login,
 
-        @Schema(description = "Email пользователя", example = "owner@example.com")
+        @Schema(description = "Email", example = "owner@example.com")
         String email,
 
-        @Schema(description = "Роль пользователя", example = "OWNER")
+        @Schema(description = "Роль", example = "OWNER")
         UserRole role)
 {
 

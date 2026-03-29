@@ -15,7 +15,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import ru.vspochernin.errapi.dto.auth.UserDto;
 import ru.vspochernin.errapi.exception.ErrorMessage;
 import ru.vspochernin.errapi.model.auth.UserRole;
@@ -26,16 +31,16 @@ import ru.vspochernin.errapi.service.UserService;
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
-@Tag(name = "Users", description = "Управление пользователями и их ролями")
+@Tag(name = "Users", description = "Получение данных пользователей и управление их ролями")
 public class UserController {
 
     private final UserService userService;
 
     @Operation(summary = "Получить список пользователей")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Список пользователей получен",
+            @ApiResponse(responseCode = "200", description = "Успешный ответ",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserDto.class)))),
-            @ApiResponse(responseCode = "401", description = "Требуется аутентификация",
+            @ApiResponse(responseCode = "401", description = "Ошибка аутентификации",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "403", description = "Недостаточно прав",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
@@ -50,11 +55,11 @@ public class UserController {
 
     @Operation(summary = "Получить пользователя по id")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Пользователь найден",
+            @ApiResponse(responseCode = "200", description = "Успешный ответ",
                     content = @Content(schema = @Schema(implementation = UserDto.class))),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Требуется аутентификация",
+            @ApiResponse(responseCode = "401", description = "Ошибка аутентификации",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "403", description = "Недостаточно прав",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
@@ -62,7 +67,8 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> get(
             @Parameter(description = "Идентификатор пользователя", example = "1")
-            @PathVariable long id)
+            @PathVariable
+            long id)
     {
         UserDto response = userService.getUser(id);
         return ResponseEntity
@@ -72,13 +78,13 @@ public class UserController {
 
     @Operation(summary = "Изменить роль пользователя")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Роль успешно изменена",
+            @ApiResponse(responseCode = "200", description = "Успешный ответ",
                     content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "400", description = "Некорректный параметр role",
+            @ApiResponse(responseCode = "400", description = "Ошибка запроса",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Требуется аутентификация",
+            @ApiResponse(responseCode = "401", description = "Ошибка аутентификации",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "403", description = "Недостаточно прав для смены роли",
+            @ApiResponse(responseCode = "403", description = "Недостаточно прав",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
@@ -86,12 +92,15 @@ public class UserController {
     @PutMapping("/{id}/role")
     public ResponseEntity<UserDto> changeRole(
             @Parameter(description = "Идентификатор пользователя", example = "2")
-            @PathVariable long id,
+            @PathVariable
+            long id,
 
             @Parameter(description = "Новая роль пользователя", example = "READER")
-            @RequestParam("role") UserRole role,
+            @RequestParam("role")
+            UserRole role,
 
-            @AuthenticationPrincipal AuthUserDetails actor)
+            @AuthenticationPrincipal
+            AuthUserDetails actor)
     {
         UserDto response = userService.changeRole(id, role, actor);
         return ResponseEntity

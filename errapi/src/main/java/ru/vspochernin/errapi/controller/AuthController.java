@@ -12,11 +12,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.vspochernin.errapi.dto.auth.ChangePasswordRequest;
 import ru.vspochernin.errapi.dto.auth.LoginRequest;
-import ru.vspochernin.errapi.dto.auth.LoginResponse;
 import ru.vspochernin.errapi.dto.auth.RegisterRequest;
+import ru.vspochernin.errapi.dto.auth.LoginResponse;
 import ru.vspochernin.errapi.dto.auth.UserDto;
 import ru.vspochernin.errapi.exception.ErrorMessage;
 import ru.vspochernin.errapi.security.AuthUserDetails;
@@ -31,12 +35,12 @@ public class AuthController {
     private final AuthService authService;
 
     @Operation(
-            summary = "Регистрация нового пользователя",
-            description = "Создает нового пользователя с ролью NONE")
+            summary = "Зарегистрировать нового пользователя",
+            description = "Новый пользователь создается с ролью NONE")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Успешная регистрация нового пользователя",
                     content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "400", description = "Ошибка валидации запроса",
+            @ApiResponse(responseCode = "400", description = "Ошибка запроса",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @PostMapping("/register")
@@ -55,7 +59,8 @@ public class AuthController {
                                               "password": "new_user_password"
                                             }
                                             """)))
-            @RequestBody RegisterRequest request)
+            @RequestBody
+            RegisterRequest request)
     {
         UserDto response = authService.register(request);
         return ResponseEntity
@@ -64,14 +69,14 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Аутентификация",
+            summary = "Осуществить аутентификацию",
             description = "Возвращает JWT токен для дальнейшей работы с защищенными эндпоинтами")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Успешная аутентификация",
                     content = @Content(schema = @Schema(implementation = LoginResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Ошибка валидации запроса",
+            @ApiResponse(responseCode = "400", description = "Ошибка запроса",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Неверный логин или пароль",
+            @ApiResponse(responseCode = "401", description = "Ошибка аутентификации",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @PostMapping("/login")
@@ -89,7 +94,8 @@ public class AuthController {
                                               "password": "owner_password"
                                             }
                                             """)))
-            @RequestBody LoginRequest request)
+            @RequestBody
+            LoginRequest request)
     {
         LoginResponse response = authService.login(request);
         return ResponseEntity
@@ -98,11 +104,11 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Смена пароля",
-            description = "Требует валидный JWT токен аутентифицированного пользователя")
+            summary = "Сменить пароль",
+            description = "Требует валидный JWT токен пользователя")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Успешное изменение пароля"),
-            @ApiResponse(responseCode = "400", description = "Ошибка валидации запроса",
+            @ApiResponse(responseCode = "400", description = "Ошибка запроса",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "401", description = "Ошибка аутентификации или несоответствие паролей",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
@@ -114,8 +120,11 @@ public class AuthController {
                     required = true,
                     description = "Старый и новый пароли",
                     content = @Content(schema = @Schema(implementation = ChangePasswordRequest.class)))
-            @RequestBody ChangePasswordRequest request,
-            @AuthenticationPrincipal AuthUserDetails actor)
+            @RequestBody
+            ChangePasswordRequest request,
+
+            @AuthenticationPrincipal
+            AuthUserDetails actor)
     {
         authService.changePassword(request, actor);
         return ResponseEntity

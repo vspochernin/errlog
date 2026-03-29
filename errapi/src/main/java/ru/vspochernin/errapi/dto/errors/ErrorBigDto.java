@@ -10,7 +10,7 @@ public record ErrorBigDto(
         @JsonUnwrapped
         ErrorSmallDto smallDto,
 
-        @Schema(description = "Полный stacktrace события", nullable = true)
+        @Schema(description = "Stacktrace события ошибки", nullable = true)
         String stacktrace)
 {
 

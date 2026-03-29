@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ru.vspochernin.errapi.model.errors.FilterField;
 import ru.vspochernin.errapi.model.errors.FilterOperation;
 
-@Schema(description = "Список поддерживаемых полей и операций фильтрации")
+@Schema(description = "Ответ списка поддерживаемых полей и операций для фильтрации")
 public record ErrorsFiltersResponse(
 
         @ArraySchema(
@@ -16,14 +16,14 @@ public record ErrorsFiltersResponse(
         List<Item> items)
 {
 
-    @Schema(description = "Описание конкретного доступного поля фильтрации")
+    @Schema(description = "Элемент списка")
     public record Item(
 
-            @Schema(description = "Имя поля в API", example = "service")
+            @Schema(description = "Имя поля", example = "service")
             String name,
 
             @ArraySchema(
-                    arraySchema = @Schema(description = "Разрешенные операции"),
+                    arraySchema = @Schema(description = "Разрешенные для поля операции"),
                     schema = @Schema(example = "eq"))
             List<String> operations,
 

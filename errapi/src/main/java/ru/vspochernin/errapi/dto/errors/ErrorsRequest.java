@@ -6,29 +6,29 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Общий запрос для поиска и аналитики ошибок")
+@Schema(description = "Базовый запрос фильтрации")
 public record ErrorsRequest(
 
         @Schema(
-                description = "Начало интервала в UTC. Если не указано, используется последние 24 часа относительно to",
+                description = "Начало интервала времени (UTC), при отсутствии - 24 часа от to",
                 example = "2026-02-18T10:00:00Z",
                 nullable = true)
         Instant from,
 
         @Schema(
-                description = "Конец интервала в UTC. Если не указано, используется текущее время на стороне API",
+                description = "Конец интервала времени (UTC), при отсутствии - текущее время",
                 example = "2027-02-18T12:00:00Z",
                 nullable = true)
         Instant to,
 
         @Schema(
-                description = "Fingerprint группы ошибок в десятичном строковом представлении UInt64",
+                description = "Fingerprint группы ошибок (строковое представление UInt64)",
                 example = "6968451703662559529",
                 nullable = true)
         String fingerprint,
 
         @ArraySchema(
-                arraySchema = @Schema(description = "Список фильтров, объединяемых по AND"),
+                arraySchema = @Schema(description = "Список фильтров (объединяются логическим AND)"),
                 schema = @Schema(implementation = Filter.class))
         List<Filter> filters)
 {
@@ -37,13 +37,13 @@ public record ErrorsRequest(
         return new ErrorsRequest(null, null, null, List.of());
     }
 
-    @Schema(description = "Конкретный фильтр запроса")
+    @Schema(description = "Фильтр")
     public record Filter(
 
-            @Schema(description = "Имя поля фильтра", example = "service")
+            @Schema(description = "Имя поля для фильтрации", example = "service")
             String field,
 
-            @Schema(description = "Операция фильтрации", example = "eq")
+            @Schema(description = "Операция для фильтрации", example = "eq")
             String operation,
 
             @ArraySchema(

@@ -7,19 +7,19 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ru.vspochernin.errapi.model.errors.ErrorEventRow;
 
-@Schema(description = "Ответ со списком событий ошибок")
+@Schema(description = "Ответ списка событий ошибок")
 public record ErrorsEventsResponse(
 
         @ArraySchema(
-                arraySchema = @Schema(description = "Список событий"),
+                arraySchema = @Schema(description = "Элементы списка"),
                 schema = @Schema(implementation = Item.class))
         List<Item> items,
 
-        @Schema(description = "Общее количество найденных событий", example = "125")
+        @Schema(description = "Общее количество найденных событий ошибок", example = "123")
         long eventsTotal)
 {
 
-    @Schema(description = "Элемент списка событий")
+    @Schema(description = "Элемент списка")
     public record Item(
             @JsonUnwrapped
             ErrorSmallDto dto)
