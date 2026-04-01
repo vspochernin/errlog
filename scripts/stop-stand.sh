@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Stop demo"
-docker compose -f docekr/docker-compose.demo.yml down --remove-orphans
+docker compose -f docker/docker-compose.demo.yml down --remove-orphans
 
 echo "Stop core"
 docker compose -f docker/docker-compose.core.yml down --remove-orphans
