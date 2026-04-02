@@ -15,6 +15,12 @@ public class SimpleGenerator {
     private static final int SCHEDULED_FIXED_RATE_MILLIS = 100;
 
     @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS)
+    public void generateException() {
+        CommonUtils.safeSleep(SLEEP_BEFORE_GENERATE_MILLIS);
+        log.error("There is exception", new IllegalAccessException("Exception message"));
+    }
+
+    @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS)
     public void generateInfo() {
         CommonUtils.safeSleep(SLEEP_BEFORE_GENERATE_MILLIS);
         log.info("There is info with int: {} and double: {}", CommonUtils.getNextInt(), CommonUtils.getNextDouble());
@@ -33,18 +39,8 @@ public class SimpleGenerator {
     }
 
     @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS)
-    public void generateException() {
+    public void generateWarnWithEmptyMessage() {
         CommonUtils.safeSleep(SLEEP_BEFORE_GENERATE_MILLIS);
-        log.error("There is exception", new IllegalAccessException("Exception message"));
-    }
-
-    @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS)
-    public void generateExceptionLogMessageWithPlaceholders() {
-        CommonUtils.safeSleep(SLEEP_BEFORE_GENERATE_MILLIS);
-        log.error(
-                "There is exception with int: {} and double: {}",
-                CommonUtils.getNextInt(),
-                CommonUtils.getNextDouble(),
-                new IllegalAccessException("Exception message, but log message with placeholders"));
+        log.error("");
     }
 }

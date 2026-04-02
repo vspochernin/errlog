@@ -44,9 +44,9 @@ public class JavaSpringLogbackRawEventNormalizer implements RawEventNormalizer {
         return Optional.of(new NormalizedErrorEvent(
                 Instant.ofEpochMilli(ts),
                 sourceType(),
-                StringUtils.getOrDefault(dto.service(), "unknown-service"),
-                StringUtils.getOrDefault(dto.level(), "UNKNOWN"),
-                StringUtils.getFirstNonBlankOrDefault(dto.formattedMessage(), dto.message(), "empty message"),
+                StringUtils.getOrDefault(dto.service(), "__unknown-service__"),
+                StringUtils.getOrDefault(dto.level(), "__UNKNOWN__"),
+                StringUtils.getFirstNonBlankOrDefault(dto.formattedMessage(), dto.message(), "__empty message__"),
 
                 dto.instance(),
                 dto.serviceVersion(),
