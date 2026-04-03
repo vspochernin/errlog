@@ -22,10 +22,8 @@ CREATE TABLE IF NOT EXISTS errlog_ch.error_events
     message_template   Nullable(String),
     exception_class    Nullable(String),
     exception_message  Nullable(String),
-    stacktrace         Nullable(String),
-
-    INDEX message_formatted_ngram message_formatted TYPE ngrambf_v1(3, 10000, 3, 7) GRANULARITY 1
+    stacktrace         Nullable(String)
 )
     ENGINE = MergeTree
         PARTITION BY toYYYYMM(timestamp)
-        ORDER BY (service, toStartOfHour(timestamp), fingerprint, timestamp, event_id);
+        ORDER BY (timestamp, service, fingerprint, event_id);
