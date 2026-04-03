@@ -25,5 +25,4 @@ CREATE TABLE IF NOT EXISTS errlog_ch.error_events
     stacktrace         Nullable(String)
 )
     ENGINE = MergeTree
-        PARTITION BY toYYYYMM(timestamp)
         ORDER BY (timestamp, service, fingerprint, event_id);
