@@ -20,25 +20,25 @@ public class SimpleGenerator {
         log.error("There is exception", new IllegalAccessException("Exception message"));
     }
 
-    @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS)
+    @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS * 2)
     public void generateInfo() {
         CommonUtils.safeSleep(SLEEP_BEFORE_GENERATE_MILLIS);
         log.info("There is info with int: {} and double: {}", CommonUtils.getNextInt(), CommonUtils.getNextDouble());
     }
 
-    @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS)
+    @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS * 3)
     public void generateWarn() {
         CommonUtils.safeSleep(SLEEP_BEFORE_GENERATE_MILLIS);
         log.warn("There is warn with int: {} and double: {}", CommonUtils.getNextInt(), CommonUtils.getNextDouble());
     }
 
-    @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS)
+    @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS * 4)
     public void generateError() {
         CommonUtils.safeSleep(SLEEP_BEFORE_GENERATE_MILLIS);
         log.error("There is error with int: {} and double: {}", CommonUtils.getNextInt(), CommonUtils.getNextDouble());
     }
 
-    @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS)
+    @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS * 5)
     public void generateWarnWithEmptyMessage() {
         CommonUtils.safeSleep(SLEEP_BEFORE_GENERATE_MILLIS);
         log.error("");
