@@ -41,6 +41,6 @@ public class SimpleGenerator {
     @Scheduled(fixedRate = SCHEDULED_FIXED_RATE_MILLIS * 5)
     public void generateWarnWithEmptyMessage() {
         CommonUtils.safeSleep(SLEEP_BEFORE_GENERATE_MILLIS);
-        log.error("");
+        log.warn("");
     }
 }
