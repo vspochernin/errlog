@@ -53,7 +53,7 @@ services:
     entrypoint: [ "/bin/sh", "-lc" ]
     command: [ "sh /init/init.sh" ]
     volumes:
-      - ./docker/kafka/init.sh:/init/init.sh:ro
+      - ./kafka/init.sh:/init/init.sh:ro
     restart: "no"
 
   clickhouse:
@@ -83,12 +83,12 @@ services:
     entrypoint: [ "/bin/sh", "-lc" ]
     command: [ "clickhouse-client --host clickhouse --user errlog_ch_user --password errlog_ch_password --multiquery < /init/init.sql" ]
     volumes:
-      - ./docker/clickhouse/init.sql:/init/init.sql:ro
+      - ./clickhouse/init.sql:/init/init.sql:ro
     restart: "no"
 
   ingestor:
     build:
-      context: ./ingestor
+      context: ../ingestor
     depends_on: # Ждем, когда стартуют Kafka и ClickHouse.
       kafka:
         condition: service_healthy
@@ -131,7 +131,7 @@ services:
 
   errapi:
     build:
-      context: ./errapi
+      context: ../errapi
     depends_on: # Ждем, когда стартуют postgres и clickhouse.
       postgres:
         condition: service_healthy

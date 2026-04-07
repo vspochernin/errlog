@@ -16,11 +16,11 @@
 
 ## Состав репозитория
 
-- `generators/jerrgen` - генератор WARN/ERROR логов, написанный на Java (Spring Boot Logback).
+- `jerrgen` - генератор WARN/ERROR логов, написанный на Java (Spring Boot Logback).
 - `ingestor` - Java Spring Boot сервис, читает Kafka и пишет нормализованные события в ClickHouse.
 - `errapi` - REST API с JWT и ролями для взаимодействия пользователей с сервисом.
-- `docker-compose.core.yml` - core контур.
-- `docker-compose.demo.yml` - demo контур.
+- `docker/docker-compose.core.yml` - core контур.
+- `docker/docker-compose.demo.yml` - demo контур.
 - `docker/vector/vector.yaml` - конфиг Vector.
 - `docker/clickhouse/init.sql` - SQL скрипт инициализации ClickHouse (создание базы и таблицы).
 - `docker/kafka/init.sh` - скрипт инициализации Kafka (создание топика `errors-raw`).
@@ -43,7 +43,7 @@
 ### 1) Доставить события в Kafka core контура
 
 - Core контур принимает входные события из Kafka топика `errors-raw`.
-- Для внешних источников необходимо использовать внешний Kafka listener core контура: `${ERRLOG_KAFKA_EXTERNAL_HOST}:9094` (см. `.env`).
+- Для внешних источников необходимо использовать внешний Kafka listener core контура: `${ERRLOG_KAFKA_EXTERNAL_HOST}:9094` (см. `docker/.env`).
 - Сообщение в Kafka должно быть в формате JSON (одна запись на одно сообщение) и содержать поле `sourceType` на верхнем уровне.
 - Минимальный пример JSON (поля можно расширять, но `sourceType` обязателен):
 
@@ -115,7 +115,7 @@ public class MyAppRawEventNormalizer implements RawEventNormalizer {
 
 ## Конфигурация
 
-В корне лежит `.env` - файл переменных окружения для Docker.
+В папке `docker` лежит `.env` - файл переменных окружения для Docker Compose.
 
 Основной параметр сейчас один:
 ```dotenv
@@ -131,45 +131,47 @@ ERRLOG_KAFKA_EXTERNAL_HOST=192.168.1.50
 
 ## Запуск
 
+Все команды ниже предполагают запуск **из корня репозитория**.
+
 ### 1. Поднять core контур
 
 ```bash
-docker compose -f docker-compose.core.yml up -d --build
+docker compose -f docker/docker-compose.core.yml up -d --build
 ```
 
 ### 2. Поднять demo контур
 
 ```bash
-docker compose -f docker-compose.demo.yml up -d --build
+docker compose -f docker/docker-compose.demo.yml up -d --build
 ```
 
 ## Вспомогательные скрипты
 
-В корне репозитория также представлены вспомогательные скрипты.
+В папке `scripts` представлены вспомогательные скрипты. Их также следует запускать **из корня репозитория**.
 
 - Перезапустить core контур:
 ```bash
-./restart-core.sh
+./scripts/restart-core.sh
 ```
 
 - Перезапустить demo контур:
 ```bash
-./restart-demo.sh
+./scripts/restart-demo.sh
 ```
 
 - Перезапустить весь стенд:
 ```bash
-./restart-stand.sh
+./scripts/restart-stand.sh
 ```
 
 - Остановить весь стенд:
 ```bash
-./stop-stand.sh
+./scripts/stop-stand.sh
 ```
 
 Остановить весь стенд с удалением Docker volumes проекта:
 ```bash
-./stop-stand-remove-volumes.sh
+./scripts/stop-stand-remove-volumes.sh
 ```
 
 ## Проверки после запуска
@@ -178,7 +180,7 @@ docker compose -f docker-compose.demo.yml up -d --build
 
 Статус контейнеров:
 ```bash
-docker compose -f docker-compose.core.yml ps -a
+docker compose -f docker/docker-compose.core.yml ps -a
 ```
 
 Ожидается, что:
@@ -212,7 +214,7 @@ docker logs -f errlog-core-ingestor-1
 
 Статус контейнеров:
 ```bash
-docker compose -f docker-compose.demo.yml ps -a
+docker compose -f docker/docker-compose.demo.yml ps -a
 ```
 Ожидается, что все сервисы будет находиться в состоянии `Up`.
 
@@ -227,7 +229,7 @@ docker logs -f errlog-demo-vector-1
 
 Swagger: http://localhost:8080/swagger-ui/index.html.
 
-Пользователь с ролью OWNER создается при старте `errapi` из переменных окружения `ERRLOG_OWNER_*` (см. `docker-compose.core.yml`), если такого пользователя еще нет в PostgreSQL.
+Пользователь с ролью OWNER создается при старте `errapi` из переменных окружения `ERRLOG_OWNER_*` (см. `docker/docker-compose.core.yml`), если такого пользователя еще нет в PostgreSQL.
 
 ### Получить JWT
 
