@@ -57,7 +57,7 @@
 4. Ingestor читает события из Kafka, нормализует их, вычисляет `fingerprint` и записывает результат в ClickHouse.
 5. Errapi осуществляет аутентификацию пользователя, читает данные из ClickHouse и предоставляет API для поиска и аналитики по ошибкам.
 
-`Ingestor` подтверждает Kafka offset только после успешной записи в ClickHouse. Это дает семантику доставки сообщений `at-least-once`.
+Ingestor подтверждает Kafka offset только после успешной записи в ClickHouse. Это дает семантику доставки сообщений `at-least-once`.
 
 ## Как подключить новый источник ошибок
 
@@ -140,7 +140,7 @@ service|logger|level
 - Иначе если у события есть `messageTemplate`: `service|logger|level|messageTemplate`, `fingerprintSource=MESSAGE_TEMPLATE`.
 - Иначе: `service|logger|level`, `fingerprintSource=MINIMAL`.
 
-Для уменьшения влияния шума из `stacktrace` перед вычислением `fingerprint` из основы удаляются все цифры.
+Для уменьшения влияния шума из `stacktrace` (адреса, идентификаторы, номера строк) перед включением в основу из самого `stacktrace` удаляются все цифры. Остальные части основы при этом не изменяются.
 
 Хэш вычисляется в ClickHouse как `xxh3(fingerprintBase)` и хранится как `UInt64`.
 
@@ -285,7 +285,7 @@ Swagger доступен по адресу:
 http://localhost:8080/swagger-ui/index.html
 ```
 
-Пользователь с ролью `OWNER` создается при старте `errapi` из переменных окружения `ERRLOG_OWNER_*` (см. `docker/docker-compose.core.yml`), если такого пользователя еще нет в PostgreSQL.
+Пользователь с ролью `OWNER` создается при старте Errapi из переменных окружения `ERRLOG_OWNER_*` (см. `docker/docker-compose.core.yml`), если такого пользователя еще нет в PostgreSQL.
 
 ### Получить JWT
 
