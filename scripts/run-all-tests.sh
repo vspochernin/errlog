@@ -23,17 +23,17 @@ echo ""
 echo "--- jerrgen ---"
 cd "$ROOT/jerrgen"
 ./mvnw -q test
-echo "  BUILD SUCCESS"
+echo "  OK"
 
 echo "--- ingestor ---"
 cd "$ROOT/ingestor"
 ./mvnw -q test
-echo "  BUILD SUCCESS"
+echo "  OK"
 
 echo "--- errapi ---"
 cd "$ROOT/errapi"
 ./mvnw -q test
-echo "  BUILD SUCCESS"
+echo "  OK"
 
 # Фаза 2: интеграционные тесты (требуется Docker)
 echo ""
@@ -53,12 +53,12 @@ fi
 echo "--- ingestor (integration) ---"
 cd "$ROOT/ingestor"
 ./mvnw -q verify
-echo "  BUILD SUCCESS"
+echo "  OK"
 
 echo "--- errapi (integration) ---"
 cd "$ROOT/errapi"
 ./mvnw -q verify
-echo "  BUILD SUCCESS"
+echo "  OK"
 
 echo ""
 echo "=========================================="
