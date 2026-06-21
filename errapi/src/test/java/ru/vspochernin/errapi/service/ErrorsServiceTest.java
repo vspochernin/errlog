@@ -123,7 +123,7 @@ class ErrorsServiceTest {
         var response = errorsService.getTimeseries(request, null);
 
         assertThat(response.items()).hasSize(1);
-        // for default 24h window → M15
+        // for default 24h window -> M15
         assertThat(response.bucketSize()).isEqualTo("15m");
     }
 

@@ -131,7 +131,7 @@ class ErrorsRepositoryIT {
 
     @Test
     void shouldCountGroups() {
-        // Два события с разными базами → две группы
+        // Два события с разными базами -> две группы
         insertWithFingerprint("base-a", Instant.now(), "svc-a");
         insertWithFingerprint("base-b", Instant.now(), "svc-a");
 

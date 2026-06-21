@@ -72,7 +72,7 @@ class DefaultRawEventJsonProcessorTest {
         var normalizer = new UnknownSourceNormalizer();
         when(normalizerRegistry.getNormalizer(any())).thenReturn(normalizer);
 
-        // Неизвестный sourceType → UnknownRawEventNormalizer → empty → событие скипается
+        // Неизвестный sourceType -> UnknownRawEventNormalizer -> empty -> событие скипается
         assertThat(processor.process(VALID_JSON)).isEmpty();
     }
 
