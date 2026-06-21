@@ -72,7 +72,7 @@ class ErrorsWhereBuilderTest {
         var where = ErrorsWhereBuilder.buildWhere(query);
 
         assertThat(where.sql()).contains("service IN (:filter_0)");
-        // values передаются списком — JDBC сам развернёт
+        // values передаются списком - JDBC сам развернёт
         @SuppressWarnings("unchecked")
         var values = (List<String>) where.params().getValue("filter_0");
         assertThat(values).containsExactly("svc1", "svc2");

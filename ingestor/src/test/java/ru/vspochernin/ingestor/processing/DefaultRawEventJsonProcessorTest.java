@@ -113,7 +113,7 @@ class DefaultRawEventJsonProcessorTest {
 
         assertThat(result).isPresent();
         var event = result.get();
-        // eventId случайный — не проверяем точное значение, только что не null
+        // eventId случайный - не проверяем точное значение, только что не null
         assertThat(event.eventId()).isNotNull();
         assertThat(event.fingerprintResult()).isEqualTo(fingerprintResult);
         assertThat(event.normalizedErrorEvent().service()).isEqualTo("happy-svc");

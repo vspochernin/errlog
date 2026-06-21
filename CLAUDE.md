@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Руководство по работе с репозиторием **errlog** — сервисом централизованного сбора и анализа ошибок информационных систем. ВКР (Java, Spring Boot). Документация и коммиты — на русском, идентификаторы кода — на английском.
+Руководство по работе с репозиторием **errlog** - сервисом централизованного сбора и анализа ошибок информационных систем. ВКР (Java, Spring Boot). Документация и коммиты - на русском, идентификаторы кода - на английском.
 
 ## Обзор
 
@@ -17,15 +17,15 @@ Jerrgen (генератор логов) → stdout JSON
 - `errlog-demo`: Jerrgen (×N реплик) + Vector. Заменяем реальными источниками.
 - `at-least-once`: Ingestor подтверждает Kafka offset только после успешной записи в ClickHouse.
 
-Полное функциональное описание — в `README.md` (аккуратно и выверено). `REVIEW.md` — если есть, это незакоммиченный черновик протокола, не учитывать для решений по коду.
+Полное функциональное описание - в `README.md` (аккуратно и выверено). `REVIEW.md` - если есть, это незакоммиченный черновик протокола, не учитывать для решений по коду.
 
 ## Модули (три независимых Maven-проекта)
 
-Каждый модуль — отдельный Maven-проект со своим `pom.xml` и `./mvnw` (без родительского агрегатора). Базовый пакет `ru.vspochernin.<module>`. Spring Boot 3.5.10, Java 21, Lombok.
+Каждый модуль - отдельный Maven-проект со своим `pom.xml` и `./mvnw` (без родительского агрегатора). Базовый пакет `ru.vspochernin.<module>`. Spring Boot 3.5.10, Java 21, Lombok.
 
-- **jerrgen** — `spring-boot-starter-web` + actuator. `SimpleGenerator` по расписанию эмитит WARN/ERROR/INFO-логи (Logstash JSON через `logback-spring.xml`). Внешних зависимостей нет; тривиальный.
-- **ingestor** — `spring-kafka` + `spring-boot-starter-jdbc` + `clickhouse-jdbc`. Читает Kafka батчами, нормализует, строит fingerprint, батчем пишет в ClickHouse. Тесты: `spring-kafka-test`, Testcontainers (ClickHouse).
-- **errapi** — `spring-boot-starter-web/security/validation/data-jpa` + Flyway (Postgres) + `clickhouse-jdbc` + jjwt 0.11.5 + springdoc. Тесты: `spring-security-test`, Testcontainers (PostgreSQL + ClickHouse). Два датасорса: Postgres (`@Primary`, JPA+Flyway) и ClickHouse (ручной JDBC, `@Qualifier("clickhouseJdbcTemplate")`).
+- **jerrgen** - `spring-boot-starter-web` + actuator. `SimpleGenerator` по расписанию эмитит WARN/ERROR/INFO-логи (Logstash JSON через `logback-spring.xml`). Внешних зависимостей нет; тривиальный.
+- **ingestor** - `spring-kafka` + `spring-boot-starter-jdbc` + `clickhouse-jdbc`. Читает Kafka батчами, нормализует, строит fingerprint, батчем пишет в ClickHouse. Тесты: `spring-kafka-test`, Testcontainers (ClickHouse).
+- **errapi** - `spring-boot-starter-web/security/validation/data-jpa` + Flyway (Postgres) + `clickhouse-jdbc` + jjwt 0.11.5 + springdoc. Тесты: `spring-security-test`, Testcontainers (PostgreSQL + ClickHouse). Два датасорса: Postgres (`@Primary`, JPA+Flyway) и ClickHouse (ручной JDBC, `@Qualifier("clickhouseJdbcTemplate")`).
 
 ---
 
@@ -34,31 +34,31 @@ Jerrgen (генератор логов) → stdout JSON
 ### Слои и пакеты
 
 **kafka**
-- `RawEventJsonKafkaListener` (`@Component`, `@RequiredArgsConstructor`, `@Slf4j`) — точка входа батчей. `@KafkaListener(topics = "${KAFKA_TOPIC}")`, метод `listen(List<String> rawEventJsons, Acknowledgment ack)`. Batch-режим (`listener.type: batch`), ручной ack (`ack-mode: manual`).
+- `RawEventJsonKafkaListener` (`@Component`, `@RequiredArgsConstructor`, `@Slf4j`) - точка входа батчей. `@KafkaListener(topics = "${KAFKA_TOPIC}")`, метод `listen(List<String> rawEventJsons, Acknowledgment ack)`. Batch-режим (`listener.type: batch`), ручной ack (`ack-mode: manual`).
 
 **processing**
-- `RawEventJsonProcessor` (interface) — `Optional<ErrorEvent> process(String rawEventJson)`.
-- `DefaultRawEventJsonProcessor` (`@Component`) — оркестратор: парсинг JSON → нормализация → fingerprint → `ErrorEvent`. Поля: `ObjectMapper`, `RawEventNormalizerRegistry`, `FingerprintBuilder`.
+- `RawEventJsonProcessor` (interface) - `Optional<ErrorEvent> process(String rawEventJson)`.
+- `DefaultRawEventJsonProcessor` (`@Component`) - оркестратор: парсинг JSON → нормализация → fingerprint → `ErrorEvent`. Поля: `ObjectMapper`, `RawEventNormalizerRegistry`, `FingerprintBuilder`.
 
 **normalization**
-- `RawEventNormalizer` (interface) — `String sourceType()`, `Optional<NormalizedErrorEvent> normalize(JsonNode rawEvent)`.
-- `JavaSpringLogbackRawEventNormalizer` — нормализатор для `sourceType() == "java-spring-logback"`.
-- `UnknownRawEventNormalizer` — fallback. `SOURCE_TYPE = "__unknown__"`, `normalize` всегда возвращает empty.
-- `RawEventNormalizerRegistry` — реестр нормализаторов по sourceType + default.
+- `RawEventNormalizer` (interface) - `String sourceType()`, `Optional<NormalizedErrorEvent> normalize(JsonNode rawEvent)`.
+- `JavaSpringLogbackRawEventNormalizer` - нормализатор для `sourceType() == "java-spring-logback"`.
+- `UnknownRawEventNormalizer` - fallback. `SOURCE_TYPE = "__unknown__"`, `normalize` всегда возвращает empty.
+- `RawEventNormalizerRegistry` - реестр нормализаторов по sourceType + default.
 
 **fingerprint**
-- `FingerprintBuilder` (interface) — `FingerprintResult build(NormalizedErrorEvent)`.
-- `DefaultFingerprintBuilder` — 4 ветки fingerprint по приоритету. `Pattern DIGITS = Pattern.compile("\\d")`.
-- `FingerprintResult` (record) — `(String fingerprintBase, FingerprintSource fingerprintSource)`.
-- `FingerprintSource` (enum) — `STACKTRACE, EXCEPTION, MESSAGE_TEMPLATE, MINIMAL`.
+- `FingerprintBuilder` (interface) - `FingerprintResult build(NormalizedErrorEvent)`.
+- `DefaultFingerprintBuilder` - 4 ветки fingerprint по приоритету. `Pattern DIGITS = Pattern.compile("\\d")`.
+- `FingerprintResult` (record) - `(String fingerprintBase, FingerprintSource fingerprintSource)`.
+- `FingerprintSource` (enum) - `STACKTRACE, EXCEPTION, MESSAGE_TEMPLATE, MINIMAL`.
 
 **writer**
-- `ErrorEventWriter` (interface) — `void write(List<ErrorEvent> events)`.
-- `ClickHouseEventWriter` — батч-INSERT в ClickHouse. `INSERT_BATCH_SIZE = 1000`.
+- `ErrorEventWriter` (interface) - `void write(List<ErrorEvent> events)`.
+- `ClickHouseEventWriter` - батч-INSERT в ClickHouse. `INSERT_BATCH_SIZE = 1000`.
 
-**model** — `NormalizedErrorEvent` (record, 13 полей), `ErrorEvent` (record: `UUID eventId, NormalizedErrorEvent, FingerprintResult`).
-**dto** — `JavaSpringLogbackRawEventDto` (record + вложенные `ThrowableDto`/`StepDto` + `getStacktraceFormatted()`).
-**utils** — `StringUtils` (3 статических метода, приватный конструктор).
+**model** - `NormalizedErrorEvent` (record, 13 полей), `ErrorEvent` (record: `UUID eventId, NormalizedErrorEvent, FingerprintResult`).
+**dto** - `JavaSpringLogbackRawEventDto` (record + вложенные `ThrowableDto`/`StepDto` + `getStacktraceFormatted()`).
+**utils** - `StringUtils` (3 статических метода, приватный конструктор).
 
 ### Логика `RawEventJsonKafkaListener.listen()`
 
@@ -78,7 +78,7 @@ Jerrgen (генератор логов) → stdout JSON
 4. `registry.getNormalizer(sourceType)` → `normalize(rawEvent)` в try/catch → исключение: warn + `empty`.
 5. Пустой результат нормализатора → warn + `empty` (fingerprint НЕ строится).
 6. `fingerprintBuilder.build(normalized)` в try/catch → исключение: warn + `empty`.
-7. Успех → `Optional.of(new ErrorEvent(UUID.randomUUID(), normalized, fingerprint))`. **`eventId` случайный** — в тестах игнорировать.
+7. Успех → `Optional.of(new ErrorEvent(UUID.randomUUID(), normalized, fingerprint))`. **`eventId` случайный** - в тестах игнорировать.
 
 ### Нормализация
 
@@ -90,8 +90,8 @@ Jerrgen (генератор логов) → stdout JSON
   - `sourceType` = `"java-spring-logback"` (всегда константа, не из DTO)
   - `service` = `getOrDefault(dto.service(), "__unknown-service__")`
   - `level` = `getOrDefault(dto.level(), "__UNKNOWN__")`
-  - `messageFormatted` = `getFirstNonBlankOrDefault(dto.formattedMessage(), dto.message(), "__empty message__")` — **приоритет formattedMessage над message**
-  - `instance`, `serviceVersion`, `logger`(=loggerName), `thread`(=threadName), `messageTemplate`(=message) — как есть, nullable
+  - `messageFormatted` = `getFirstNonBlankOrDefault(dto.formattedMessage(), dto.message(), "__empty message__")` - **приоритет formattedMessage над message**
+  - `instance`, `serviceVersion`, `logger`(=loggerName), `thread`(=threadName), `messageTemplate`(=message) - как есть, nullable
   - `exceptionClass` = `throwable != null ? throwable.className() : null`
   - `exceptionMessage` = `throwable != null ? throwable.message() : null`
   - `stacktrace` = `dto.getStacktraceFormatted()`
@@ -105,7 +105,7 @@ Jerrgen (генератор логов) → stdout JSON
   - `sourceType == null` → default.
   - **Неизвестный non-null sourceType** → `bySourceType::get` вернёт null → `map` даст empty → `orElse(default)` → **default** (а не null). Оба случая заканчиваются пропуском события.
 
-### Fingerprint — `DefaultFingerprintBuilder`
+### Fingerprint - `DefaultFingerprintBuilder`
 
 Подготовка: `service/logger/level` через `getOrDefault(..., "")` (null/blank → пустая строка). Четыре ветки по приоритету (if-else):
 1. **STACKTRACE** (высший): `isNotBlank(stacktrace)` → `base = service|logger|level|stacktraceNoDigits`, где `stacktraceNoDigits = DIGITS.matcher(stacktrace).replaceAll("")`. **Цифры удаляются ТОЛЬКО из stacktrace.**
@@ -115,7 +115,7 @@ Jerrgen (генератор логов) → stdout JSON
 
 Разделитель `"|"`. Одинаковые stacktrace, отличающиеся только цифрами → одинаковый `fingerprintBase`.
 
-### Writer — `ClickHouseEventWriter`
+### Writer - `ClickHouseEventWriter`
 
 `INSERT_SQL` (таблица `errlog_ch.error_events`, 16 колонок):
 ```sql
@@ -202,15 +202,15 @@ spring:
 - `UserRepository` (`JpaRepository<User, Long>`): `findByLogin`, `existsByLogin`, `existsByEmail`, `existsByRole`.
 - `ErrorsRepository` (`@Repository`, `@Qualifier("clickhouseJdbcTemplate") NamedParameterJdbcTemplate`, `ErrorEventRowMapper`, таблица `errlog_ch.error_events`).
 
-**security** — `SecurityConfig`, `JwtService`, `JwtAuthenticationFilter`, `AuthUserDetails`, `AuthUserDetailsService`, `JsonAuthenticationEntryPoint`, `JsonAccessDeniedHandler`, `SecurityErrorWriter`.
-**config** — `DataSourcesConfig`, `ErrorsAllowlist`, `OpenApiConfig`.
-**dto/auth**, **dto/errors** — records.
-**model/auth** — `User` (JPA entity), `UserRole`.
-**model/errors** — records/enums.
-**exception** — `ErrapiException`, `ErrapiErrorType`, `ErrorMessage`, `ExceptionApiHandler`.
-**util** — `ErrorsWhereBuilder`, `ErrorsFiltersParser`, `FingerprintParser`, `TimeWindowParser`, `ValidationUtils`.
-**mapper** — `ErrorEventRowMapper`.
-**init** — `OwnerInitializer`.
+**security** - `SecurityConfig`, `JwtService`, `JwtAuthenticationFilter`, `AuthUserDetails`, `AuthUserDetailsService`, `JsonAuthenticationEntryPoint`, `JsonAccessDeniedHandler`, `SecurityErrorWriter`.
+**config** - `DataSourcesConfig`, `ErrorsAllowlist`, `OpenApiConfig`.
+**dto/auth**, **dto/errors** - records.
+**model/auth** - `User` (JPA entity), `UserRole`.
+**model/errors** - records/enums.
+**exception** - `ErrapiException`, `ErrapiErrorType`, `ErrorMessage`, `ExceptionApiHandler`.
+**util** - `ErrorsWhereBuilder`, `ErrorsFiltersParser`, `FingerprintParser`, `TimeWindowParser`, `ValidationUtils`.
+**mapper** - `ErrorEventRowMapper`.
+**init** - `OwnerInitializer`.
 
 ### Security
 
@@ -231,21 +231,21 @@ spring:
 
 `JsonAuthenticationEntryPoint.ATTR_ERROR_TYPE = "ERRAPI_AUTH_ERROR_TYPE"` (public static final). Если атрибут null → `AUTH_REQUIRED`.
 
-`@PreAuthorize`: `ErrorsController` → `hasAnyRole('READER','ADMIN','OWNER')`; `UserController` → `hasAnyRole('ADMIN','OWNER')`; `AuthController` — без классовой, `/register` и `/login` permitAll, `/password` требует authenticated.
+`@PreAuthorize`: `ErrorsController` → `hasAnyRole('READER','ADMIN','OWNER')`; `UserController` → `hasAnyRole('ADMIN','OWNER')`; `AuthController` - без классовой, `/register` и `/login` permitAll, `/password` требует authenticated.
 
 ### Сервисы
 
 `AuthService`:
 - `register`: `existsByLogin` → `LOGIN_EXISTS`; `existsByEmail` → `EMAIL_EXISTS`; создаёт `User` с ролью `NONE`, хеш через `passwordEncoder.encode`; `UserDto.fromUser(save)`.
 - `login`: `authenticationManager.authenticate(UsernamePasswordAuthenticationToken(login, password))` (выброс `BadCredentialsException` пробрасывается); `new LoginResponse(jwtService.generateToken(login))`.
-- `changePassword(request, actor)`: `passwordEncoder.matches(oldPassword, actor.getPassword())` иначе `PASSWORD_DOES_NOT_MATCH`; **затем** если `oldPassword.equals(newPassword)` → `INVALID_PASSWORD` ("New password matches the old one") — порядок важен; `findById(actor.getId())` иначе `BAD_CREDENTIALS`; `setPasswordHash(encode(newPassword))`; `save`.
+- `changePassword(request, actor)`: `passwordEncoder.matches(oldPassword, actor.getPassword())` иначе `PASSWORD_DOES_NOT_MATCH`; **затем** если `oldPassword.equals(newPassword)` → `INVALID_PASSWORD` ("New password matches the old one") - порядок важен; `findById(actor.getId())` иначе `BAD_CREDENTIALS`; `setPasswordHash(encode(newPassword))`; `save`.
 
 `ErrorsService` (`ErrorsRepository`):
 - `getFilters()` → `ErrorsAllowlist.FIELDS`.
 - `getEvents(request, limit, offset)`: `ValidationUtils.validateLimitOffset`; `ErrorsQuery.parseFromErrorsRequest`; `countEvents` → eventsTotal; `findEvents` → items.
 - `getEventById(eventId)`: `validateUuid`; `findEventById` → `ErrorsEventResponse`, иначе `NOT_FOUND` ("Event not found").
 - `getGroups(request, limit, offset)`: валидация; parse; `countEventsAndGroupsTotals`; `findGroups`.
-- `getTimeseries(request, bucketRaw)`: parse query (**БЕЗ валидации limit/offset** — нет пагинации); bucket null/blank → `TimeBucket.byTimeWindow(timeWindow)`, иначе `byName(bucketRaw)`; `findTimeseries`; ответ с `bucket.getName()`.
+- `getTimeseries(request, bucketRaw)`: parse query (**БЕЗ валидации limit/offset** - нет пагинации); bucket null/blank → `TimeBucket.byTimeWindow(timeWindow)`, иначе `byName(bucketRaw)`; `findTimeseries`; ответ с `bucket.getName()`.
 
 `UserService`:
 - `listUsers`, `getUser(id)` (не найден → `NOT_FOUND`).
@@ -261,7 +261,7 @@ spring:
 
 Новые пользователи регистрируются как `NONE`. Примечание: READER (1) может изменить NONE (0), т.к. 0 < 1.
 
-### Слой errors — парсеры/билдеры
+### Слой errors - парсеры/билдеры
 
 `ErrorsWhereBuilder.buildWhere(query, columnPrefix)` (static): всегда `"{prefix}timestamp >= :from AND {prefix}timestamp < :to"` (params `from`, `to` = `Timestamp.from(...)`). Если `fingerprintO` present → `AND {prefix}fingerprint = toUInt64(:fingerprint)` (значение `BigInteger.toString()`). Для каждого фильтра: колонка `prefix + field.column()`, параметр `filter_{n}` (n=0,1,...); `EQ` → `= :filter_N`, `NE` → `!= :filter_N`, `IN` → `IN (:filter_N)` (список), `LIKE` → `LIKE :filter_N`; default → `BAD_REQUEST`. `Where` record `(String sql, MapSqlParameterSource params)`.
 
@@ -277,9 +277,9 @@ spring:
 
 `TimeBucket` (enum): `M1("1m",1m,"INTERVAL 1 MINUTE")`, `M5`, `M15`, `H1`, `H6`, `D1`. `byName` → lookup иначе `BAD_REQUEST`. `byTimeWindow` (duration from..to): ≤1ч→M1, ≤6ч→M5, ≤24ч→M15, ≤7д→H1, ≤30д→H6, иначе D1.
 
-`ErrorsAllowlist.FIELDS` — 11 полей (name/column/operations/description): sourceType, service, level (БЕЗ LIKE!), messageFormatted, instance, serviceVersion, logger, thread, messageTemplate, exceptionClass, exceptionMessage. `byName` иначе `BAD_REQUEST`.
+`ErrorsAllowlist.FIELDS` - 11 полей (name/column/operations/description): sourceType, service, level (БЕЗ LIKE!), messageFormatted, instance, serviceVersion, logger, thread, messageTemplate, exceptionClass, exceptionMessage. `byName` иначе `BAD_REQUEST`.
 
-`FilterOperation` (enum): `EQ("eq",false)`, `NE("ne",false)`, `IN("in",true)`, `LIKE("like",false)`. `byName` иначе `BAD_REQUEST`. `IN` — единственная с `allowsMultipleValues=true`.
+`FilterOperation` (enum): `EQ("eq",false)`, `NE("ne",false)`, `IN("in",true)`, `LIKE("like",false)`. `byName` иначе `BAD_REQUEST`. `IN` - единственная с `allowsMultipleValues=true`.
 
 `ErrorsQuery.parseFromErrorsRequest` (static): `TimeWindowParser.parse` + `FingerprintParser.parseO` + `ErrorsFiltersParser.parse` → `new ErrorsQuery(timeWindow, fingerprintO, filters)`.
 
@@ -290,7 +290,7 @@ spring:
 - `findEventById(eventId)` → SELECT со **stacktrace** (полный), `WHERE event_id = toUUID(:eventId)`, `LIMIT 1` → `Optional`.
 - `countEventsAndGroupsTotals(query)` → `count() AS events_total, uniqExact(fingerprint) AS groups_total` → `EventsAndGroupsTotals`.
 - `findGroups(query, limit, offset)` → WHERE с префиксом `"src."`; `GROUP BY src.fingerprint`; агрегаты `argMax(col, tuple(timestamp, event_id))`; `ORDER BY group_count DESC, group_last_seen DESC, group_fingerprint DESC`.
-- `findTimeseries(query, bucket)` → `toStartOfInterval(timestamp, %s) AS bucket_start, count() ... GROUP BY bucket_start ORDER BY bucket_start ASC` (bucket.getIntervalSql() подставляется в SQL — НЕ параметр).
+- `findTimeseries(query, bucket)` → `toStartOfInterval(timestamp, %s) AS bucket_start, count() ... GROUP BY bucket_start ORDER BY bucket_start ASC` (bucket.getIntervalSql() подставляется в SQL - НЕ параметр).
 
 `ErrorEventRowMapper` читает `fingerprint_str` (именно `_str`), `event_id`, `timestamp` (Timestamp→Instant), остальные колонки через `getString`.
 
@@ -311,7 +311,7 @@ spring:
 
 ### Exception handling
 
-`ErrapiException` (`extends RuntimeException`): `ErrapiErrorType errorType`, `String additionalInfo`. Конструкторы вызывают `super(...)`: без info → `super(description)`; с info → `super(description + ": " + additionalInfo)` (если info не blank). **Формат сообщения: `description` или `description: additionalInfo`.** (Раньше `getMessage()` возвращал null — баг, исправлен.)
+`ErrapiException` (`extends RuntimeException`): `ErrapiErrorType errorType`, `String additionalInfo`. Конструкторы вызывают `super(...)`: без info → `super(description)`; с info → `super(description + ": " + additionalInfo)` (если info не blank). **Формат сообщения: `description` или `description: additionalInfo`.** (Раньше `getMessage()` возвращал null - баг, исправлен.)
 
 `ErrapiErrorType` (enum, `id/description/httpStatus`): `UNEXPECTED_ERROR(0,500)`, `LOGIN_EXISTS(1,400)`, `EMAIL_EXISTS(2,400)`, `INVALID_LOGIN(3,400)`, `INVALID_EMAIL(4,400)`, `INVALID_PASSWORD(5,400)`, `PASSWORD_DOES_NOT_MATCH(6,401)`, `INCORRECT_ROLE_CHANGE(7,403)`, `BAD_REQUEST(8,400)`, `NOT_FOUND(9,404)`, `BAD_CREDENTIALS(10,401)`, `USER_DOES_NOT_EXIST(11,401)`, `AUTH_REQUIRED(12,401)`, `INVALID_TOKEN(13,401)`, `FORBIDDEN(14,403)`, `INCORRECT_TIME_BORDERS(15,400)`.
 
@@ -321,7 +321,7 @@ spring:
 
 ### Конфигурация
 
-`application.yaml`: `spring.datasource` (Postgres, `${POSTGRES_*}`), `jpa.open-in-view: false`, `hibernate.ddl-auto: validate`, `flyway.enabled: true` (classpath:db/migration). Миграция `V1__implement_db_schema.sql` создаёт `users` (BIGSERIAL PK, UNIQUE login/email, CHECK role IN ('NONE','READER','ADMIN','OWNER'), DEFAULT 'NONE'). `OpenApiConfig` — security scheme `bearerAuth`.
+`application.yaml`: `spring.datasource` (Postgres, `${POSTGRES_*}`), `jpa.open-in-view: false`, `hibernate.ddl-auto: validate`, `flyway.enabled: true` (classpath:db/migration). Миграция `V1__implement_db_schema.sql` создаёт `users` (BIGSERIAL PK, UNIQUE login/email, CHECK role IN ('NONE','READER','ADMIN','OWNER'), DEFAULT 'NONE'). `OpenApiConfig` - security scheme `bearerAuth`.
 
 ### Env Errapi (обязательны)
 
@@ -333,15 +333,15 @@ spring:
 
 ---
 
-## Сборка и тесты — ВНИМАНИЕ
+## Сборка и тесты - ВНИМАНИЕ
 
-**Дефолтная `java` на машине — JDK 17, проекту нужна JDK 21.** Maven упадёт с `release version 21 not supported` без явного указания:
+**Дефолтная `java` на машине - JDK 17, проекту нужна JDK 21.** Maven упадёт с `release version 21 not supported` без явного указания:
 
 ```bash
 export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 ```
 
-Команды — **по модулям** (сначала cd в модуль):
+Команды - **по модулям** (сначала cd в модуль):
 
 ```bash
 cd ingestor && JAVA_HOME=$(/usr/libexec/java_home -v 21) ./mvnw test          # юниты
@@ -352,54 +352,54 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./mvnw -Dtest=DefaultFingerprintBuilde
 ./scripts/run-all-tests.sh
 ```
 
-Верхнего Maven-команды нет — каждый модуль отдельный. `run-all-tests.sh` прогоняет все модули.
+Верхнего Maven-команды нет - каждый модуль отдельный. `run-all-tests.sh` прогоняет все модули.
 
 ### Текущее состояние тестов
 
-224 теста (199 юнит + 23 интеграционных + 2 отключённых smoke). Подробно — в `TESTING.md`.
-- jerrgen: 1 тест — `contextLoads()` проходит автономно.
+224 теста (199 юнит + 23 интеграционных + 2 отключённых smoke). Подробно - в `TESTING.md`.
+- jerrgen: 1 тест - `contextLoads()` проходит автономно.
 - ingestor: 79 юнит + 10 интеграционных (Testcontainers: ClickHouse). `./mvnw test` без инфраструктуры; `./mvnw verify` требует Docker.
 - errapi: 119 юнит + 13 интеграционных (Testcontainers: ClickHouse + PostgreSQL). `./mvnw test` без инфраструктуры; `./mvnw verify` требует Docker.
-- Интеграционные — Maven Failsafe (`*IT.java`), фаза `verify`. Testcontainers reuse (`.withReuse(true)`).
-- `IngestorApplicationTests` и `ErrapiApplicationTests` — `@Disabled` smoke-тесты: требуют полный Spring-контекст + живую инфраструктуру + env. Инструкция запуска — в javadoc каждого класса.
+- Интеграционные - Maven Failsafe (`*IT.java`), фаза `verify`. Testcontainers reuse (`.withReuse(true)`).
+- `IngestorApplicationTests` и `ErrapiApplicationTests` - `@Disabled` smoke-тесты: требуют полный Spring-контекст + живую инфраструктуру + env. Инструкция запуска - в javadoc каждого класса.
 
 ### Стратегия тестирования
 
-Предпочитать **чистые юниты** и **Mockito** вместо `@SpringBootTest`. Доменная логика изолирована в статических утилитах / компонентах без зависимостей — покрывать в первую очередь.
+Предпочитать **чистые юниты** и **Mockito** вместо `@SpringBootTest`. Доменная логика изолирована в статических утилитах / компонентах без зависимостей - покрывать в первую очередь.
 
 **Чистые юниты (без Spring, без инфры):**
 - ingestor: `DefaultFingerprintBuilder` (4 ветки; удаление цифр **только** в STACKTRACE), `StringUtils` (blank не только null), `JavaSpringLogbackRawEventDto.getStacktraceFormatted()` (null throwable, пустой stepArray, `fileName=="null"`, `lineNumber<=0`), `JavaSpringLogbackRawEventNormalizer` (реальный `new ObjectMapper()`; дефолты, `ts<=0` → empty), `UnknownRawEventNormalizer`, `RawEventNormalizerRegistry`.
 - errapi: `FingerprintParser`, `TimeWindowParser`, `ErrorsFiltersParser`, `ErrorsWhereBuilder`, `TimeBucket` (границы `byName`/`byTimeWindow`), `ValidationUtils`, `ErrorsAllowlist`/`FilterField`/`FilterOperation`, `ErrorsQuery.parseFromErrorsRequest`, `UserRole.validateCanModify`, `JwtService` (`new JwtService(secret, seconds)`, секрет ≥32 байта), `ErrapiErrorType`/`ErrorMessage`, `*Dto.fromRow/fromUser`, `AuthUserDetails.getAuthorities` (префикс `ROLE_`).
 
-**Mockito (без контекста):** `DefaultRawEventJsonProcessor` (мок registry + builder, реальный ObjectMapper; eventId случайный — игнорировать), `ClickHouseEventWriter` (мок `JdbcTemplate`; ранний return, `batchUpdate`), `RawEventJsonKafkaListener` (прямой вызов `listen(...)`, мок processor/writer/`Acknowledgment`; ack при успехе, **без ack** при ошибке writer), `ErrorsService`/`UserService`/`AuthService`, `JwtAuthenticationFilter`, `ExceptionApiHandler`.
+**Mockito (без контекста):** `DefaultRawEventJsonProcessor` (мок registry + builder, реальный ObjectMapper; eventId случайный - игнорировать), `ClickHouseEventWriter` (мок `JdbcTemplate`; ранний return, `batchUpdate`), `RawEventJsonKafkaListener` (прямой вызов `listen(...)`, мок processor/writer/`Acknowledgment`; ack при успехе, **без ack** при ошибке writer), `ErrorsService`/`UserService`/`AuthService`, `JwtAuthenticationFilter`, `ExceptionApiHandler`.
 
 **Интеграционные (Testcontainers):** реальные SQL `ErrorsRepository` и JPA/Flyway `UserRepository` покрыты через `*IT.java`. Зависимости Testcontainers уже в обоих pom.
 
 ## Нюансы, важные для сверки тестов
 
-- **Fingerprint: ветка `EXCEPTION` недостижима для `java-spring-logback`.** `exceptionClass` берётся из `throwable.className`, который формирует заголовок стектрейса → если класс есть, STACKTRACE выигрывает; если нет — условие EXCEPTION не выполняется. Корректный fallback для других источников. Покрыто тестами (отдельный кейс с прямым конструированием модели).
-- **`xxh3` считается в ClickHouse, не в Java.** `ClickHouseEventWriter` отдаёт сырой `fingerprintBase`, `xxh3(?)` — в SQL. Проверено интеграционно.
+- **Fingerprint: ветка `EXCEPTION` недостижима для `java-spring-logback`.** `exceptionClass` берётся из `throwable.className`, который формирует заголовок стектрейса → если класс есть, STACKTRACE выигрывает; если нет - условие EXCEPTION не выполняется. Корректный fallback для других источников. Покрыто тестами (отдельный кейс с прямым конструированием модели).
+- **`xxh3` считается в ClickHouse, не в Java.** `ClickHouseEventWriter` отдаёт сырой `fingerprintBase`, `xxh3(?)` - в SQL. Проверено интеграционно.
 - **`at-least-once` протестирована дважды.** Юнит (ошибка writer → исключение пробрасывается, ack не вызывается) + интеграционный (остановка контейнера ClickHouse → writer падает → ack не вызывается).
 - **`eventId` недетерминирован** (`UUID.randomUUID()`). В тестах процессора игнорируется.
-- **`Instant.now()` внутри `TimeWindowParser`/`JwtService`** — тесты используют `isCloseTo` (допуск 5с) или передают оба значения.
+- **`Instant.now()` внутри `TimeWindowParser`/`JwtService`** - тесты используют `isCloseTo` (допуск 5с) или передают оба значения.
 - **`ErrapiException` вызывает `super(message)`.** Формат: `description` или `description: additionalInfo`. Production-фикс (раньше `getMessage()` возвращал null).
-- **`level` — единственное поле без LIKE** в allowlist.
-- **`FilterOperation.IN` — единственная с `allowsMultipleValues=true`**; для остальных `values.size() > 1` → ошибка.
+- **`level` - единственное поле без LIKE** в allowlist.
+- **`FilterOperation.IN` - единственная с `allowsMultipleValues=true`**; для остальных `values.size() > 1` → ошибка.
 - **`getTimeseries` НЕ валидирует limit/offset** (нет пагинации).
 - **`findEvents` намеренно возвращает `stacktrace = NULL`**; полный stacktrace только в `findEventById`.
-- **`changePassword`**: порядок проверок — сначала `PASSWORD_DOES_NOT_MATCH` (неверный старый), потом `INVALID_PASSWORD` (новый == старый).
+- **`changePassword`**: порядок проверок - сначала `PASSWORD_DOES_NOT_MATCH` (неверный старый), потом `INVALID_PASSWORD` (новый == старый).
 
 ## Known gaps (не покрыто юнитами)
 
-- **`OwnerInitializer`** — читает `System.getenv()`, нельзя замокать без Spring-контекста. Нужен `@SpringBootTest` с env. Логика простая, проверена вручную.
-- **Контроллеры** (`AuthController`, `ErrorsController`, `UserController`) — тонкий прокси, логика в сервисах (покрыты). Нужен `@WebMvcTest`.
-- **Конфиги** (`DataSourcesConfig`, `OpenApiConfig`, `SecurityConfig`) — тестируются фактом запуска.
+- **`OwnerInitializer`** - читает `System.getenv()`, нельзя замокать без Spring-контекста. Нужен `@SpringBootTest` с env. Логика простая, проверена вручную.
+- **Контроллеры** (`AuthController`, `ErrorsController`, `UserController`) - тонкий прокси, логика в сервисах (покрыты). Нужен `@WebMvcTest`.
+- **Конфиги** (`DataSourcesConfig`, `OpenApiConfig`, `SecurityConfig`) - тестируются фактом запуска.
 
 ## Соглашения
 
 - Стиль: Lombok (`@RequiredArgsConstructor`, `@Slf4j`), constructor injection, `record` для DTO/value objects, статические утилиты с приватным конструктором. Комментарии на русском, идентификаторы на английском.
-- ClickHouse-таблица `errlog_ch.error_events` создаётся `docker/clickhouse/init.sql` (внешняя). Таблица `users` — Flyway `errapi/.../db/migration/V1__implement_db_schema.sql`.
-- Ветвление: нумерованные feature-ветки (напр. `9-test-ingestor`); PR squash-merge в `master`. Коммитить только по просьбе. В конце сообщений — Co-Authored-By trailer.
+- ClickHouse-таблица `errlog_ch.error_events` создаётся `docker/clickhouse/init.sql` (внешняя). Таблица `users` - Flyway `errapi/.../db/migration/V1__implement_db_schema.sql`.
+- Ветвление: нумерованные feature-ветки (напр. `9-test-ingestor`); PR squash-merge в `master`. Коммитить только по просьбе. В конце сообщений - Co-Authored-By trailer.
 
 ## Запуск стенда (для ручных/интеграционных проверок)
 

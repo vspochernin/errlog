@@ -67,7 +67,7 @@ class UserRepositoryIT {
                 "dup", "one@example.com", "hash", "NONE");
 
         // Повторный логин нарушает UNIQUE-ограничение.
-        // Spring мапит это в DuplicateKeyException (SQLSTATE 23505) — специфичный подтип,
+        // Spring мапит это в DuplicateKeyException (SQLSTATE 23505) - специфичный подтип,
         // поэтому тест доказывает, что упало именно по дубликату ключа, а не по иной причине.
         assertThatThrownBy(() -> jdbc.update(
                 "INSERT INTO users (login, email, password_hash, role) VALUES (?, ?, ?, ?)",
@@ -79,7 +79,7 @@ class UserRepositoryIT {
     void shouldEnforceRoleCheckConstraint() {
         // Несуществующая роль нарушает CHECK-ограничение. Spring не выделяет для CHECK
         // отдельный подтип, поэтому проверяем SQLSTATE 23514 (check_violation) в корневой
-        // причине — это доказывает, что упало именно по CHECK, а не по другому constraint.
+        // причине - это доказывает, что упало именно по CHECK, а не по другому constraint.
         assertThatThrownBy(() -> jdbc.update(
                 "INSERT INTO users (login, email, password_hash, role) VALUES (?, ?, ?, ?)",
                 "bad-role", "bad@example.com", "hash", "SUPERHERO"))

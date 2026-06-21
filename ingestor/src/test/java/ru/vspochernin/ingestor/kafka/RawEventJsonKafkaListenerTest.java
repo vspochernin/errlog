@@ -94,7 +94,7 @@ class RawEventJsonKafkaListenerTest {
         when(processor.process(JSON1)).thenReturn(Optional.of(event));
         doThrow(new RuntimeException("ClickHouse unavailable")).when(writer).write(anyList());
 
-        // Исключение пробрасывается наружу, ack НЕ вызывается — at-least-once.
+        // Исключение пробрасывается наружу, ack НЕ вызывается - at-least-once.
         assertThatThrownBy(() -> listener.listen(List.of(JSON1), ack))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("ClickHouse unavailable");

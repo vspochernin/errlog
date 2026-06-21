@@ -68,7 +68,7 @@ class UserRoleTest {
 
     @Test
     void readerCanChangeNone() {
-        // READER (уровень 1) может изменить NONE (уровень 0) — targetRole.level (0) < reader.level (1), ок
+        // READER (уровень 1) может изменить NONE (уровень 0) - targetRole.level (0) < reader.level (1), ок
         assertThatCode(() -> UserRole.READER.validateCanModify(UserRole.NONE, UserRole.NONE))
                 .doesNotThrowAnyException();
     }

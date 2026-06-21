@@ -200,7 +200,7 @@ class JavaSpringLogbackRawEventNormalizerTest {
 
     @Test
     void shouldReturnEmptyForInvalidJson() {
-        // Конструируем что-то, что не маппится в DTO — например, timestamp как строка
+        // Конструируем что-то, что не маппится в DTO - например, timestamp как строка
         ObjectNode raw = JsonNodeFactory.instance.objectNode();
         raw.put("timestamp", "not_a_number");
 
