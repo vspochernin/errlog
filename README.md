@@ -417,7 +417,7 @@ curl -sS \
 
 Интеграционные тесты поднимают реальные контейнеры через Testcontainers (ClickHouse и PostgreSQL) и проверяют: корректность SQL-запросов к ClickHouse (включая `xxh3`-хэш), миграции Flyway и constraint'ы PostgreSQL.
 
-Подробная ревизия тестов — в [`TESTING.md`](./TESTING.md).
+Тестовая стратегия, нюансы покрытия (включая недостижимую ветку `EXCEPTION`, семантику `at-least-once`, smoke-тесты) и список непокрытых компонентов — в [`TESTING.md`](./TESTING.md).
 
 ### Запуск
 
