@@ -5,14 +5,16 @@ import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-import ru.vspochernin.errapi.model.auth.UserRole;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Testcontainers
 class UserRepositoryIT {
@@ -64,29 +66,27 @@ class UserRepositoryIT {
                 "INSERT INTO users (login, email, password_hash, role) VALUES (?, ?, ?, ?)",
                 "dup", "one@example.com", "hash", "NONE");
 
-        try {
-            jdbc.update(
-                    "INSERT INTO users (login, email, password_hash, role) VALUES (?, ?, ?, ?)",
-                    "dup", "two@example.com", "hash", "NONE");
-            // Если не упало — constraint не сработал
-            var rows = jdbc.queryForList("SELECT count(*) FROM users WHERE login = 'dup'", Long.class);
-            assertThat(rows.getFirst()).isLessThanOrEqualTo(1);
-        } catch (Exception e) {
-            assertThat(e.getMessage()).contains("duplicate");
-        }
+        // Повторный логин нарушает UNIQUE-ограничение.
+        // Spring мапит это в DuplicateKeyException (SQLSTATE 23505) — специфичный подтип,
+        // поэтому тест доказывает, что упало именно по дубликату ключа, а не по иной причине.
+        assertThatThrownBy(() -> jdbc.update(
+                "INSERT INTO users (login, email, password_hash, role) VALUES (?, ?, ?, ?)",
+                "dup", "two@example.com", "hash", "NONE"))
+                .isInstanceOf(DuplicateKeyException.class);
     }
 
     @Test
     void shouldEnforceRoleCheckConstraint() {
-        try {
-            jdbc.update(
-                    "INSERT INTO users (login, email, password_hash, role) VALUES (?, ?, ?, ?)",
-                    "bad-role", "bad@example.com", "hash", "SUPERHERO");
-            var rows = jdbc.queryForList("SELECT count(*) FROM users WHERE login = 'bad-role'", Long.class);
-            assertThat(rows.getFirst()).isEqualTo(0);
-        } catch (Exception e) {
-            assertThat(e.getMessage()).contains("violates");
-        }
+        // Несуществующая роль нарушает CHECK-ограничение. Spring не выделяет для CHECK
+        // отдельный подтип, поэтому проверяем SQLSTATE 23514 (check_violation) в корневой
+        // причине — это доказывает, что упало именно по CHECK, а не по другому constraint.
+        assertThatThrownBy(() -> jdbc.update(
+                "INSERT INTO users (login, email, password_hash, role) VALUES (?, ?, ?, ?)",
+                "bad-role", "bad@example.com", "hash", "SUPERHERO"))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .rootCause()
+                .isInstanceOf(java.sql.SQLException.class)
+                .hasFieldOrPropertyWithValue("SQLState", "23514");
     }
 
     @Test

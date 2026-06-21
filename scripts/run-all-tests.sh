@@ -15,25 +15,36 @@ echo " Root: $ROOT"
 echo " JDK:  $JAVA_HOME"
 echo "=========================================="
 
+# Запуск Maven: тихий режим при успехе, но при падении — повтор с полным выводом,
+# чтобы было видно какой тест упал и почему.
+run_maven() {
+    local module="$1"
+    local goal="$2"
+    local label="$3"
+
+    echo "--- $label ---"
+    cd "$ROOT/$module"
+    if ./mvnw -q "$goal"; then
+        echo "  OK"
+    else
+        echo "  FAILED — повтор с подробным выводом:"
+        ./mvnw "$goal" || true
+        echo ""
+        echo "=========================================="
+        echo " FAILED: $label"
+        echo "=========================================="
+        exit 1
+    fi
+}
+
 # Фаза 1: юнит-тесты (быстро, без Docker)
 echo ""
 echo ">>> Phase 1: Unit tests (no Docker needed) <<<"
 echo ""
 
-echo "--- jerrgen ---"
-cd "$ROOT/jerrgen"
-./mvnw -q test
-echo "  OK"
-
-echo "--- ingestor ---"
-cd "$ROOT/ingestor"
-./mvnw -q test
-echo "  OK"
-
-echo "--- errapi ---"
-cd "$ROOT/errapi"
-./mvnw -q test
-echo "  OK"
+run_maven jerrgen test "jerrgen"
+run_maven ingestor test "ingestor"
+run_maven errapi test "errapi"
 
 # Фаза 2: интеграционные тесты (требуется Docker)
 echo ""
@@ -50,15 +61,8 @@ if ! docker info >/dev/null 2>&1; then
     exit 0
 fi
 
-echo "--- ingestor (integration) ---"
-cd "$ROOT/ingestor"
-./mvnw -q verify
-echo "  OK"
-
-echo "--- errapi (integration) ---"
-cd "$ROOT/errapi"
-./mvnw -q verify
-echo "  OK"
+run_maven ingestor verify "ingestor (integration)"
+run_maven errapi verify "errapi (integration)"
 
 echo ""
 echo "=========================================="
