@@ -89,16 +89,16 @@ class RawEventJsonKafkaListenerTest {
     }
 
     @Test
-    void shouldNotAckWhenWriterThrows() {
-        var event1 = createEvent();
-        when(processor.process(JSON1)).thenReturn(Optional.of(event1));
+    void shouldNotAckWhenWriterThrowsAndPropagateException() {
+        var event = createEvent();
+        when(processor.process(JSON1)).thenReturn(Optional.of(event));
         doThrow(new RuntimeException("ClickHouse unavailable")).when(writer).write(anyList());
 
+        // Исключение пробрасывается наружу, ack НЕ вызывается — at-least-once.
         assertThatThrownBy(() -> listener.listen(List.of(JSON1), ack))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("ClickHouse unavailable");
 
-        // ack НЕ должен быть вызван при ошибке записи
         verify(ack, never()).acknowledge();
     }
 
@@ -108,17 +108,6 @@ class RawEventJsonKafkaListenerTest {
 
         verify(writer, never()).write(anyList());
         verify(ack).acknowledge();
-    }
-
-    @Test
-    void shouldPropagateExceptionWhenWriterFails() {
-        var event = createEvent();
-        when(processor.process(JSON1)).thenReturn(Optional.of(event));
-        doThrow(new RuntimeException("db error")).when(writer).write(anyList());
-
-        assertThatThrownBy(() -> listener.listen(List.of(JSON1), ack))
-                .isInstanceOf(RuntimeException.class);
-        verify(ack, never()).acknowledge();
     }
 
     private static ErrorEvent createEvent() {

@@ -15,8 +15,10 @@ public class ErrapiException extends RuntimeException {
     }
 
     public ErrapiException(ErrapiErrorType errorType, String additionalInfo) {
-        super(additionalInfo);
+        super(additionalInfo == null || additionalInfo.isBlank()
+                ? errorType.getDescription()
+                : errorType.getDescription() + ": " + additionalInfo);
         this.errorType = errorType;
-        this.additionalInfo = additionalInfo;
+        this.additionalInfo = additionalInfo == null ? "" : additionalInfo;
     }
 }
