@@ -186,7 +186,7 @@ class ErrorsRepositoryIT {
 
         assertThat(ts).isNotEmpty();
         // Сумма count по всем бакетам = общему числу событий (10), ни одно не потерялось
-        long totalCount = ts.stream().mapToLong(ErrorTimeseriesRow -> ErrorTimeseriesRow.count()).sum();
+        long totalCount = ts.stream().mapToLong(ErrorTimeseriesRow::count).sum();
         assertThat(totalCount).isEqualTo(10L);
         // Бакеты отсортированы по возрастанию bucket_start
         for (int i = 1; i < ts.size(); i++) {
