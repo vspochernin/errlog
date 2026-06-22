@@ -16,6 +16,7 @@ import ru.vspochernin.errapi.security.AuthUserDetails;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -64,7 +65,8 @@ class UserServiceTest {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getUser(999))
-                .isInstanceOf(ErrapiException.class);
+                .isInstanceOf(ErrapiException.class)
+                .hasMessageContaining("Resource not found");
     }
 
     @Test
@@ -80,6 +82,9 @@ class UserServiceTest {
         var result = userService.changeRole(2, UserRole.NONE, owner);
 
         assertThat(result.role()).isEqualTo(UserRole.NONE);
+        // Доказываем, что роль реально сохранена в репозиторий, а не просто возвращена из памяти.
+        verify(userRepository).save(target);
+        assertThat(target.getRole()).isEqualTo(UserRole.NONE);
     }
 
     @Test
@@ -89,6 +94,20 @@ class UserServiceTest {
         assertThatThrownBy(() -> userService.changeRole(1, UserRole.READER, admin))
                 .isInstanceOf(ErrapiException.class)
                 .hasMessageContaining("Can't change own role");
+    }
+
+    @Test
+    void readerCannotPromoteNoneToReader() {
+        // READER не может повысить NONE до READER: newRole.level(1) >= this.level(1) -> запрет.
+        var reader = new AuthUserDetails(createTestUser(1, "reader", UserRole.READER));
+        var target = new User();
+        target.setId(2);
+        target.setRole(UserRole.NONE);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(target));
+
+        assertThatThrownBy(() -> userService.changeRole(2, UserRole.READER, reader))
+                .isInstanceOf(ErrapiException.class)
+                .hasMessageContaining("Can't assign higher or equal role");
     }
 
     private static User createTestUser(long id, String login, UserRole role) {

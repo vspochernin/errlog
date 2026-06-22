@@ -24,8 +24,12 @@ class ErrorsQueryTest {
 
         assertThat(query.timeWindow().from()).isEqualTo(Instant.parse("2026-01-01T00:00:00Z"));
         assertThat(query.timeWindow().to()).isEqualTo(Instant.parse("2026-01-02T00:00:00Z"));
-        assertThat(query.fingerprintO()).isPresent();
+        // Проверяем значение fingerprint, а не только наличие.
+        assertThat(query.fingerprintO()).hasValue(new java.math.BigInteger("123456"));
         assertThat(query.filters()).hasSize(1);
+        assertThat(query.filters().getFirst().field().name()).isEqualTo("service");
+        assertThat(query.filters().getFirst().operation()).isEqualTo(FilterOperation.EQ);
+        assertThat(query.filters().getFirst().values()).containsExactly("svc1");
     }
 
     @Test

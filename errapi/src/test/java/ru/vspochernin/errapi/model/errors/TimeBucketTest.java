@@ -64,6 +64,14 @@ class TimeBucketTest {
     }
 
     @Test
+    void byTimeWindowExactly24HoursShouldReturnM15() {
+        // Ровно 24 часа - дефолтное окно системы. Граница <=: 24h попадает в M15, не в H1.
+        Instant from = Instant.EPOCH;
+        Instant to = from.plus(Duration.ofHours(24));
+        assertThat(TimeBucket.byTimeWindow(new TimeWindow(from, to))).isEqualTo(TimeBucket.M15);
+    }
+
+    @Test
     void byTimeWindowUpTo7DaysShouldReturnH1() {
         Instant from = Instant.EPOCH;
         Instant to = from.plus(Duration.ofDays(6));
@@ -71,9 +79,25 @@ class TimeBucketTest {
     }
 
     @Test
+    void byTimeWindowExactly7DaysShouldReturnH1() {
+        // Ровно 7 дней - граница <=: 7d попадает в H1, не в H6.
+        Instant from = Instant.EPOCH;
+        Instant to = from.plus(Duration.ofDays(7));
+        assertThat(TimeBucket.byTimeWindow(new TimeWindow(from, to))).isEqualTo(TimeBucket.H1);
+    }
+
+    @Test
     void byTimeWindowUpTo30DaysShouldReturnH6() {
         Instant from = Instant.EPOCH;
         Instant to = from.plus(Duration.ofDays(29));
+        assertThat(TimeBucket.byTimeWindow(new TimeWindow(from, to))).isEqualTo(TimeBucket.H6);
+    }
+
+    @Test
+    void byTimeWindowExactly30DaysShouldReturnH6() {
+        // Ровно 30 дней - граница <=: 30d попадает в H6, не в D1.
+        Instant from = Instant.EPOCH;
+        Instant to = from.plus(Duration.ofDays(30));
         assertThat(TimeBucket.byTimeWindow(new TimeWindow(from, to))).isEqualTo(TimeBucket.H6);
     }
 

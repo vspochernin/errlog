@@ -44,6 +44,29 @@ class ErrorsFiltersParserTest {
         var result = ErrorsFiltersParser.parse(raw);
 
         assertThat(result).hasSize(2);
+        // Проверяем содержимое обоих фильтров, а не только размер.
+        assertThat(result.get(0).field().name()).isEqualTo("service");
+        assertThat(result.get(0).operation()).isEqualTo(FilterOperation.EQ);
+        assertThat(result.get(0).values()).containsExactly("svc1");
+        assertThat(result.get(1).field().name()).isEqualTo("level");
+        assertThat(result.get(1).operation()).isEqualTo(FilterOperation.NE);
+        assertThat(result.get(1).values()).containsExactly("INFO");
+    }
+
+    @Test
+    void shouldThrowWhenOperationIsBlank() {
+        var raw = List.of(new ErrorsRequest.Filter("service", "   ", List.of("val")));
+        assertThatThrownBy(() -> ErrorsFiltersParser.parse(raw))
+                .isInstanceOf(ErrapiException.class)
+                .hasMessageContaining("operation is null or blank");
+    }
+
+    @Test
+    void shouldThrowWhenValuesIsNull() {
+        var raw = List.of(new ErrorsRequest.Filter("service", "eq", null));
+        assertThatThrownBy(() -> ErrorsFiltersParser.parse(raw))
+                .isInstanceOf(ErrapiException.class)
+                .hasMessageContaining("values is empty");
     }
 
     @Test

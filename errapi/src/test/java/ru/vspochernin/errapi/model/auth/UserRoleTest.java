@@ -42,16 +42,18 @@ class UserRoleTest {
 
     @Test
     void adminCannotChangeAdmin() {
+        // targetRole (ADMIN) >= this.level (ADMIN) -> ветка "change higher or equal".
         assertThatThrownBy(() -> UserRole.ADMIN.validateCanModify(UserRole.ADMIN, UserRole.READER))
                 .isInstanceOf(ErrapiException.class)
-                .hasMessageContaining("higher or equal role");
+                .hasMessageContaining("Can't change higher or equal role");
     }
 
     @Test
     void adminCannotAssignAdmin() {
+        // newRole (ADMIN) >= this.level (ADMIN) -> ветка "assign higher or equal".
         assertThatThrownBy(() -> UserRole.ADMIN.validateCanModify(UserRole.READER, UserRole.ADMIN))
                 .isInstanceOf(ErrapiException.class)
-                .hasMessageContaining("higher or equal role");
+                .hasMessageContaining("Can't assign higher or equal role");
     }
 
     @Test
@@ -62,8 +64,18 @@ class UserRoleTest {
 
     @Test
     void readerCannotChangeReader() {
+        // targetRole (READER) >= this.level (READER) -> "change higher or equal".
         assertThatThrownBy(() -> UserRole.READER.validateCanModify(UserRole.READER, UserRole.NONE))
-                .isInstanceOf(ErrapiException.class);
+                .isInstanceOf(ErrapiException.class)
+                .hasMessageContaining("Can't change higher or equal role");
+    }
+
+    @Test
+    void noneCannotChangeAnyone() {
+        // NONE (уровень 0) не может менять никого: даже NONE >= NONE (0 >= 0) -> "change higher or equal".
+        assertThatThrownBy(() -> UserRole.NONE.validateCanModify(UserRole.NONE, UserRole.NONE))
+                .isInstanceOf(ErrapiException.class)
+                .hasMessageContaining("higher or equal role");
     }
 
     @Test

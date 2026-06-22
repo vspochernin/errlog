@@ -95,8 +95,9 @@ class UserRepositoryIT {
                 "INSERT INTO users (login, email, password_hash, role) VALUES (?, ?, ?, ?)",
                 "owner1", "owner1@example.com", "hash", "OWNER");
 
+        // Ровно один OWNER - не "какой-то положительный count", а конкретное число.
         var count = jdbc.queryForObject(
                 "SELECT count(*) FROM users WHERE role = 'OWNER'", Long.class);
-        assertThat(count).isPositive();
+        assertThat(count).isEqualTo(1L);
     }
 }

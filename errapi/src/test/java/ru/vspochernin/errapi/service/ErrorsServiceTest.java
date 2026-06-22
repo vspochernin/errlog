@@ -78,7 +78,15 @@ class ErrorsServiceTest {
 
         var response = errorsService.getEventById(EVENT_ID);
 
+        // Проверяем содержимое ответа, а не только что он не null.
+        // Структура: ErrorsEventResponse -> ErrorBigDto (smallDto + stacktrace) -> ErrorSmallDto (поля).
         assertThat(response).isNotNull();
+        var bigDto = response.dto();
+        var smallDto = bigDto.smallDto();
+        assertThat(smallDto.eventId()).isEqualTo(EVENT_ID);
+        assertThat(smallDto.service()).isEqualTo("test-svc");
+        assertThat(smallDto.level()).isEqualTo("ERROR");
+        assertThat(bigDto.stacktrace()).isEqualTo("at com.Foo.doIt(Foo.java:42)");
     }
 
     @Test

@@ -356,10 +356,10 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./mvnw -Dtest=DefaultFingerprintBuilde
 
 ### Текущее состояние тестов
 
-224 теста (199 юнит + 23 интеграционных + 2 отключённых smoke). Подробно - в `TESTING.md`.
+234 теста (209 юнит + 23 интеграционных + 2 отключённых smoke). Подробно - в `TESTING.md`.
 - jerrgen: 1 тест - `contextLoads()` проходит автономно.
 - ingestor: 79 юнит + 10 интеграционных (Testcontainers: ClickHouse). `./mvnw test` без инфраструктуры; `./mvnw verify` требует Docker.
-- errapi: 119 юнит + 13 интеграционных (Testcontainers: ClickHouse + PostgreSQL). `./mvnw test` без инфраструктуры; `./mvnw verify` требует Docker.
+- errapi: 129 юнит + 13 интеграционных (Testcontainers: ClickHouse + PostgreSQL). `./mvnw test` без инфраструктуры; `./mvnw verify` требует Docker.
 - Интеграционные - Maven Failsafe (`*IT.java`), фаза `verify`. Testcontainers reuse (`.withReuse(true)`).
 - `IngestorApplicationTests` и `ErrapiApplicationTests` - `@Disabled` smoke-тесты: требуют полный Spring-контекст + живую инфраструктуру + env. Инструкция запуска - в javadoc каждого класса.
 

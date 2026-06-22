@@ -47,6 +47,8 @@ class ExceptionApiHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody().errorType()).isEqualTo("BAD_CREDENTIALS");
+        // additionalInfo = ex.getMessage() - доказываем, что сообщение пробрасывается.
+        assertThat(response.getBody().additionalInfo()).isEqualTo("Bad credentials");
     }
 
     @Test
@@ -58,6 +60,8 @@ class ExceptionApiHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody().errorType()).isEqualTo("INVALID_LOGIN");
+        // additionalInfo = "{field}: {defaultMessage}" - доказываем формат.
+        assertThat(response.getBody().additionalInfo()).isEqualTo("login: must not be blank");
     }
 
     @Test
@@ -112,6 +116,8 @@ class ExceptionApiHandlerTest {
         var response = handler.noSuchElementException(ex);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        // additionalInfo = ex.getMessage() - доказываем проброс сообщения.
+        assertThat(response.getBody().additionalInfo()).isEqualTo("not found");
     }
 
     @Test
@@ -146,5 +152,7 @@ class ExceptionApiHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody().errorType()).isEqualTo("UNEXPECTED_ERROR");
+        // additionalInfo = exception.toString() (не getMessage) - доказываем формат.
+        assertThat(response.getBody().additionalInfo()).contains("unexpected error");
     }
 }

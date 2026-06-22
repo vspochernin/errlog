@@ -138,6 +138,20 @@ class AuthServiceTest {
                 .hasMessageContaining("Old password does not match");
     }
 
+    @Test
+    void changePasswordShouldThrowWhenNewPasswordMatchesOld() {
+        // Старый пароль верный (matches=true), но новый совпадает со старым -> INVALID_PASSWORD.
+        // Доказывает порядок проверок: matches проверяется ДО equals, и ветка old==new достижима.
+        var actor = new AuthUserDetails(createTestUser(1, "user", UserRole.READER));
+        when(passwordEncoder.matches("samepass", actor.getPassword())).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.changePassword(
+                new ChangePasswordRequest("samepass", "samepass"), actor))
+                .isInstanceOf(ErrapiException.class)
+                .hasMessageContaining("New password matches the old one");
+        verify(userRepository, never()).save(any());
+    }
+
     private static User createTestUser(long id, String login, UserRole role) {
         var user = new User();
         user.setId(id);

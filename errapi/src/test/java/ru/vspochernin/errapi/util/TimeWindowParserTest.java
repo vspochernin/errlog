@@ -63,6 +63,16 @@ class TimeWindowParserTest {
     }
 
     @Test
+    void fromEqualToToShouldNotThrow() {
+        // Граница: from == to не должно бросать (isAfter строгое, равенство допустимо).
+        Instant same = Instant.parse("2026-01-01T00:00:00Z");
+        var window = TimeWindowParser.parse(same, same);
+
+        assertThat(window.from()).isEqualTo(same);
+        assertThat(window.to()).isEqualTo(same);
+    }
+
+    @Test
     void shouldParseValidStringRange() {
         var window = TimeWindowParser.parse("2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z");
 

@@ -91,10 +91,15 @@ class ErrorsWhereBuilderTest {
 
     @Test
     void shouldUseColumnPrefix() {
-        var query = new ErrorsQuery(WINDOW, Optional.empty(), List.of());
+        var filter = new ErrorsFilter(
+                new FilterField("service", "service", Set.of(FilterOperation.EQ), "d"),
+                FilterOperation.EQ, List.of("svc1"));
+        var query = new ErrorsQuery(WINDOW, Optional.empty(), List.of(filter));
         var where = ErrorsWhereBuilder.buildWhere(query, "src.");
 
+        // Префикс применяется и к timestamp, и к колонкам фильтров.
         assertThat(where.sql()).contains("src.timestamp >= :from AND src.timestamp < :to");
+        assertThat(where.sql()).contains("src.service = :filter_0");
     }
 
     @Test
@@ -108,6 +113,9 @@ class ErrorsWhereBuilderTest {
         var query = new ErrorsQuery(WINDOW, Optional.empty(), List.of(filter1, filter2));
         var where = ErrorsWhereBuilder.buildWhere(query);
 
-        assertThat(where.sql()).contains(":filter_0").contains(":filter_1");
+        // Точные проверки имён параметров (contains матчил бы :filter_00 и т.п.).
+        assertThat(where.sql()).contains("service = :filter_0").contains("level = :filter_1");
+        assertThat(where.params().getValue("filter_0")).isEqualTo("svc1");
+        assertThat(where.params().getValue("filter_1")).isEqualTo("ERROR");
     }
 }
