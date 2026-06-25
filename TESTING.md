@@ -28,7 +28,7 @@
 | Ingestor | 79 (+1 disabled) | 10 | 90 |
 | Errapi | 129 (+1 disabled) | 13 | 143 |
 | Jerrgen | 1 | - | 1 |
-| **Всего** | **210** | **23** | **234** |
+| **Всего** | **209** | **23** | **234** |
 
 Все юнит-тесты запускаются без внешней инфраструктуры (только JDK 21). Интеграционные требуют Docker.
 
@@ -56,7 +56,7 @@ cd ingestor && ./mvnw -Dtest=DefaultFingerprintBuilderTest test
 
 ## Ingestor
 
-### Чистые юниты - 60 тестов
+### Чистые юниты - 61 тест
 
 | Класс | Тестов | Что проверяет |
 |---|---|---|
@@ -86,7 +86,7 @@ cd ingestor && ./mvnw -Dtest=DefaultFingerprintBuilderTest test
 
 143 теста в 20 классах.
 
-### Чистые юниты - 104 теста
+### Чистые юниты - 102 теста
 
 | Класс | Тестов | Что проверяет |
 |---|---|---|
@@ -104,7 +104,7 @@ cd ingestor && ./mvnw -Dtest=DefaultFingerprintBuilderTest test
 | `ErrorsFiltersParserTest` | 14 | null/empty, одиночный/множественные фильтры (с содержимым), null-элемент, blank поле, blank операция, null values, неизвестное поле/операция, unsupported, пустые/множественные значения, IN с множеством |
 | `ExceptionApiHandlerTest` | 14 | ErrapiException (с/без info), BadCredentials (additionalInfo), MethodArgumentNotValid (с ошибкой поля/без, mapping login/email/password + additionalInfo), HttpMessageNotReadable, NumberFormat, NoSuchElement (additionalInfo), TypeMismatch, запрет доступа, generic Exception (additionalInfo = toString) |
 
-### Mockito - 25 тестов
+### Mockito - 27 тестов
 
 | Класс | Тестов | Что проверяет |
 |---|---|---|
